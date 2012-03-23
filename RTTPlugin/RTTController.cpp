@@ -15,10 +15,10 @@ extern const int BUFFER_SIZE = 256;
 static BOOL CALLBACK EnumChildProcForKeyInput(HWND hWnd, LPARAM lParam);
 static BOOL CALLBACK EnumChildProcForMouseInput(HWND hWnd, LPARAM lParam);
 
-//static const PCTSTR g_szChildWindowTitle		= _T("untitled");
-//static const PCTSTR g_szMouseInputWindowTitle	= _T("pGLWidget");
-static const PCTSTR g_szChildWindowTitle		= _T("Scene 1 [Camera]");
-static const PCTSTR g_szMouseInputWindowTitle	= _T("unnamed");
+static const PCTSTR g_szChildWindowTitle		= _T("untitled");
+static const PCTSTR g_szMouseInputWindowTitle	= _T("pGLWidget");
+//static const PCTSTR g_szChildWindowTitle		= _T("Scene 1 [Camera]");
+//static const PCTSTR g_szMouseInputWindowTitle	= _T("unnamed");
 
 const PCSTR COMMAND_TUMBLE	= "tumble";
 const PCSTR COMMAND_TRACK	= "track";
@@ -239,27 +239,30 @@ void RTTController::Execute(HWND hWnd, LPCSTR szCommand, double deltaX, double d
 		return;
 	}
 
-	//{
-	//	TCHAR szBuffer[256];
-	//	_stprintf_s(szBuffer, 256, _T("keywindow: %X, mousewindow: %X"), m_hKeyInputWnd, m_hMouseInputWnd);
-	//	LogDebugMessage(Log_Debug, szBuffer);
-	//}
+	{
+		TCHAR szBuffer[256];
+		_stprintf_s(szBuffer, 256, _T("keywindow: %X, mousewindow: %X"), m_hKeyInputWnd, m_hMouseInputWnd);
+		LogDebugMessage(Log_Debug, szBuffer);
+	}
 
 	if (_strcmpi(szCommand, COMMAND_TUMBLE) == 0) {
 		ModKeyDown();
 		if (m_bSyskeyDown) {
+			LogDebugMessage(Log_Debug, _T("Tumble execute"));
 			TumbleExecute((INT)(deltaX * m_fTumbleRate), (INT)(deltaY * m_fTumbleRate));
 		}
 
 	} else if (_strcmpi(szCommand, COMMAND_TRACK) == 0) {
 		ModKeyDown();
 		if (m_bSyskeyDown) {
+			LogDebugMessage(Log_Debug, _T("Track execute"));
 			TrackExecute((INT)(deltaX * m_fTrackRate), (INT)(deltaY * m_fTrackRate));
 		}
 
 	} else if (_strcmpi(szCommand, COMMAND_DOLLY) == 0) {
 		ModKeyDown();
 		if (m_bSyskeyDown) {
+			LogDebugMessage(Log_Debug, _T("Dolly execute"));
 			DollyExecute((INT)(deltaX * m_fDollyRate), (INT)(deltaY * m_fDollyRate));
 		}
 
@@ -486,19 +489,12 @@ void RTTController::ModKeyUp(void)
 
 BOOL CALLBACK EnumChildProcForKeyInput(HWND hWnd, LPARAM lParam)
 {
-	static int count = 0;		// TODO Delete
-
 	TCHAR szWindowTitle[BUFFER_SIZE];
 	GetWindowText(hWnd, szWindowTitle, _countof(szWindowTitle));
 	
 	if (!_tcsicmp(g_szChildWindowTitle, szWindowTitle) /*&& !_tcsicmp(_T("QWidget"), szClassTitle)*/) {
 		*(HWND*)lParam = hWnd;
-		count++;
-		
-		if (count == 2) {
-			count = 0;
-			return FALSE;
-		}
+		return FALSE;
 	}
 	return TRUE;
 }
