@@ -15,6 +15,7 @@
 const int BUFFER_SIZE = 256;
 static const PCSTR COMMAND_INIT	= "init";
 static const PCSTR COMMAND_EXIT	= "exit";
+static const PCSTR COMMAND_REGISTERMACRO = "registermacro";
 
 // グローバル変数:
 HINSTANCE hInst;								// 現在のインターフェイス
@@ -261,7 +262,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				} else if (_strcmpi(szCommand, COMMAND_EXIT) == 0) {
 					OutputDebugString(_T("exit\n"));
 					DestroyWindow(hWnd);
-				} else {	// ショートカットキー
+				} else if (_strcmpi(szCommand, COMMAND_REGISTERMACRO) == 0) {	// ショートカットキー
+					if (!controller.RegisterMacro(packet.szCommand, &cTermination)) {
+						_stprintf_s(szError, _countof(szError), _T("RTTコントローラのマクロの登録に失敗しています。"));
+						ReportError(szError);
+					}
+				} else {
 					controller.Execute(hTargetWnd, szCommand, 0, 0);
 					Sleep(1);
 					doCount = TRUE;

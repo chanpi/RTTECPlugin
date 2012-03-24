@@ -1,9 +1,10 @@
 #pragma once
 
 #include "VirtualMotion.h"
+#include "MacroPlugin.h"
 class I4C3DCursor;
 
-class RTTController
+class RTTController : public MacroPlugin
 {
 public:
 	RTTController(void);
@@ -17,8 +18,6 @@ protected:
 	void TumbleExecute(int deltaX, int deltaY);
 	void TrackExecute(int deltaX, int deltaY);
 	void DollyExecute(int deltaX, int deltaY);
-
-	//void HotkeyExecute(I4C3DContext* pContext, PCTSTR szCommand) const;
 
 	BOOL InitializeModifierKeys(PCSTR szModifierKeys);
 	BOOL GetTargetChildWnd(void);

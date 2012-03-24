@@ -17,7 +17,7 @@ static BOOL CALLBACK EnumChildProcForMouseInput(HWND hWnd, LPARAM lParam);
 
 static const PCTSTR g_szChildWindowTitle		= _T("untitled");
 static const PCTSTR g_szMouseInputWindowTitle	= _T("pGLWidget");
-//static const PCTSTR g_szChildWindowTitle		= _T("Scene 1 [Camera]");
+//static const PCTSTR g_szChildWindowTitle		= _T("RTT_DEMOCAR.rtx [Camera]");
 //static const PCTSTR g_szMouseInputWindowTitle	= _T("unnamed");
 
 const PCSTR COMMAND_TUMBLE	= "tumble";
@@ -239,11 +239,13 @@ void RTTController::Execute(HWND hWnd, LPCSTR szCommand, double deltaX, double d
 		return;
 	}
 
-	{
-		TCHAR szBuffer[256];
-		_stprintf_s(szBuffer, 256, _T("keywindow: %X, mousewindow: %X"), m_hKeyInputWnd, m_hMouseInputWnd);
-		LogDebugMessage(Log_Debug, szBuffer);
-	}
+	//{
+	//	TCHAR szBuffer[256];
+	//	_stprintf_s(szBuffer, 256, _T("keywindow: %X, mousewindow: %X"), m_hKeyInputWnd, m_hMouseInputWnd);
+	//	LogDebugMessage(Log_Debug, szBuffer);
+	//	OutputDebugString(szBuffer);
+	//	OutputDebugString(_T("\n"));
+	//}
 
 	if (_strcmpi(szCommand, COMMAND_TUMBLE) == 0) {
 		ModKeyDown();
@@ -267,10 +269,12 @@ void RTTController::Execute(HWND hWnd, LPCSTR szCommand, double deltaX, double d
 		}
 
 	} else {
+		ModKeyUp();
+		PlayMacro(szCommand, m_hKeyInputWnd);
+
 //#if _UNICODE || UNICODE
-//		TCHAR wszCommand[BUFFER_SIZE] = {0};
+//		WCHAR wszCommand[BUFFER_SIZE] = {0};
 //		MultiByteToWideChar(CP_ACP, 0, szCommand, -1, wszCommand, _countof(wszCommand));
-//		ModKeyUp();
 //		HotkeyExecute(pContext, wszCommand);
 //#else
 //		pContext->pController->HotkeyExecute(lpszCommand);
@@ -498,6 +502,25 @@ BOOL CALLBACK EnumChildProcForKeyInput(HWND hWnd, LPARAM lParam)
 	}
 	return TRUE;
 }
+
+//BOOL CALLBACK EnumChildProcForKeyInput(HWND hWnd, LPARAM lParam)
+//{
+//	static int count = 0;		// TODO Delete
+//
+//	TCHAR szWindowTitle[BUFFER_SIZE];
+//	GetWindowText(hWnd, szWindowTitle, _countof(szWindowTitle));
+//	
+//	if (!_tcsicmp(g_szChildWindowTitle, szWindowTitle) /*&& !_tcsicmp(_T("QWidget"), szClassTitle)*/) {
+//		*(HWND*)lParam = hWnd;
+//		count++;
+//		
+//		if (count == 2) {
+//			count = 0;
+//			return FALSE;
+//		}
+//	}
+//	return TRUE;
+//}
 
 BOOL CALLBACK EnumChildProcForMouseInput(HWND hWnd, LPARAM lParam)
 {

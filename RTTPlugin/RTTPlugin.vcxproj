@@ -86,8 +86,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="I4C3DCursor.h" />
+    <ClInclude Include="MacroPlugin.h" />
     <ClInclude Include="Resource.h" />
-    <ClInclude Include="RTT4GamepadController.h" />
     <ClInclude Include="RTTController.h" />
     <ClInclude Include="RTTPlugin.h" />
     <ClInclude Include="stdafx.h" />
@@ -95,7 +95,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="I4C3DCursor.cpp" />
-    <ClCompile Include="RTT4GamepadController.cpp" />
+    <ClCompile Include="MacroPlugin.cpp" />
     <ClCompile Include="RTTController.cpp" />
     <ClCompile Include="RTTPlugin.cpp" />
     <ClCompile Include="stdafx.cpp">
