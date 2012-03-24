@@ -72,7 +72,7 @@ void MacroPlugin::PlayMacro(LPCSTR macroName, HWND hKeyInputWnd, BOOL bUsePostMe
 			}
 			macro = macro->next;
 		}
-		Sleep(50);
+		//Sleep(10);
 		macro = it->second;
 		while (macro != NULL) {
 			VMVirtualKeyUp(hKeyInputWnd, macro->uKeyCode);

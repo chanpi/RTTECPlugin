@@ -9,6 +9,15 @@
 #include <WinSock2.h>
 #include <ShellAPI.h>
 
+#include <cstdlib>	// 必要
+
+#if _DEBUG
+#define _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
+
+#define new  ::new( _NORMAL_BLOCK, __FILE__, __LINE__ )
+#endif
+
 #define MAX_LOADSTRING	100
 #define TIMER_ID		1
 
@@ -43,7 +52,11 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
 
- 	// TODO: ここにコードを挿入してください。
+#if DEBUG || _DEBUG
+	_CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
+	
+	// TODO: ここにコードを挿入してください。
 	MSG msg;
 	HACCEL hAccelTable;
 
