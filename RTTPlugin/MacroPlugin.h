@@ -7,7 +7,7 @@ public:
 	~MacroPlugin(void);
 
 	BOOL RegisterMacro(LPCSTR szBuffer, char* termination);
-	void PlayMacro(LPCSTR macroName, HWND hKeyInputWnd);
+	void PlayMacro(LPCSTR macroName, HWND hKeyInputWnd, BOOL bUsePostMessageToSendKey);
 
 private:
 	BOOL AnalyzeMacro(LPCSTR macroName, LPCSTR macroValue);

@@ -20,6 +20,8 @@ namespace {
 	map<string, MacroKey*> g_macroTable;
 };
 
+static BOOL IsModKeysDown(UINT uKeyCode);
+
 MacroPlugin::MacroPlugin(void)
 {
 }
@@ -57,24 +59,44 @@ BOOL MacroPlugin::RegisterMacro(LPCSTR szBuffer, char* termination)
 	return TRUE;
 }
 
-void MacroPlugin::PlayMacro(LPCSTR macroName, HWND hKeyInputWnd)
+void MacroPlugin::PlayMacro(LPCSTR macroName, HWND hKeyInputWnd, BOOL bUsePostMessageToSendKey)
 {
 	map<string, MacroKey*>::iterator it = g_macroTable.find(string(macroName));
 	if (it != g_macroTable.end()) {
 		MacroKey* macro = it->second;
 
 		while (macro != NULL) {
-			VMVirtualKeyDown(hKeyInputWnd, macro->uKeyCode, TRUE);
-			Sleep(1);	// TODO ‚à‚¤­‚µ‘Ò‚Â‚©H
-			if (!IsKeyDown(macro->uKeyCode)) {
-				VMVirtualKeyDown(hKeyInputWnd, macro->uKeyCode, FALSE);
-				Sleep(1);	// TODO ‚à‚¤­‚µ‘Ò‚Â‚©H
-				if (!IsKeyDown(macro->uKeyCode)) {
-					break;
-				}
+			VMVirtualKeyDown(hKeyInputWnd, macro->uKeyCode, bUsePostMessageToSendKey);
+			if (!IsModKeysDown(macro->uKeyCode)) {
+				break;
 			}
 			macro = macro->next;
 		}
+		Sleep(50);
+		macro = it->second;
+		while (macro != NULL) {
+			VMVirtualKeyUp(hKeyInputWnd, macro->uKeyCode);
+			macro = macro->next;
+		}
+	}
+}
+
+BOOL IsModKeysDown(UINT uKeyCode)
+{
+	int i = 0;
+	for (i = 0; i < waitModkeyDownCount; ++i) {
+		Sleep(1);
+		if (!IsKeyDown(uKeyCode)) {
+			continue;
+		}
+		// “o˜^‚µ‚½ƒL[‚Í‰Ÿ‚³‚ê‚Ä‚¢‚½
+		break;
+	}
+
+	if (i < waitModkeyDownCount) {
+		return TRUE;
+	} else {
+		return FALSE;
 	}
 }
 
@@ -99,7 +121,7 @@ BOOL MacroPlugin::AnalyzeMacro(LPCSTR macroName, LPCSTR macroValue)
 		TCHAR szKey[BUFFER_SIZE] = {0};
 		pType = _tcschr(szMacroValue, _T('+'));
 		if (pType != NULL) {
-			_tcsncpy_s(szKey, _countof(szKey), szMacroValue, pType-szMacroValue+1);
+			_tcsncpy_s(szKey, _countof(szKey), szMacroValue, pType-szMacroValue);
 			szMacroValue = pType+1;
 		} else {
 			_tcscpy_s(szKey, _countof(szKey), szMacroValue);

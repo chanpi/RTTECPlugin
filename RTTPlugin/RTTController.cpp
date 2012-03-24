@@ -17,8 +17,6 @@ static BOOL CALLBACK EnumChildProcForMouseInput(HWND hWnd, LPARAM lParam);
 
 static const PCTSTR g_szChildWindowTitle		= _T("untitled");
 static const PCTSTR g_szMouseInputWindowTitle	= _T("pGLWidget");
-//static const PCTSTR g_szChildWindowTitle		= _T("RTT_DEMOCAR.rtx [Camera]");
-//static const PCTSTR g_szMouseInputWindowTitle	= _T("unnamed");
 
 const PCSTR COMMAND_TUMBLE	= "tumble";
 const PCSTR COMMAND_TRACK	= "track";
@@ -127,7 +125,7 @@ BOOL RTTController::InitializeModifierKeys(PCSTR szModifierKeys)
 		char szKey[BUFFER_SIZE] = {0};
 		pType = strchr(szModifierKeys, '+');
 		if (pType != NULL) {
-			strncpy_s(szKey, _countof(szKey), szModifierKeys, pType-szModifierKeys+1);
+			strncpy_s(szKey, _countof(szKey), szModifierKeys, pType-szModifierKeys);
 			szModifierKeys = pType+1;
 		} else {
 			strcpy_s(szKey, _countof(szKey), szModifierKeys);
@@ -270,15 +268,7 @@ void RTTController::Execute(HWND hWnd, LPCSTR szCommand, double deltaX, double d
 
 	} else {
 		ModKeyUp();
-		PlayMacro(szCommand, m_hKeyInputWnd);
-
-//#if _UNICODE || UNICODE
-//		WCHAR wszCommand[BUFFER_SIZE] = {0};
-//		MultiByteToWideChar(CP_ACP, 0, szCommand, -1, wszCommand, _countof(wszCommand));
-//		HotkeyExecute(pContext, wszCommand);
-//#else
-//		pContext->pController->HotkeyExecute(lpszCommand);
-//#endif
+		PlayMacro(szCommand, m_hKeyInputWnd, m_bUsePostMessageToSendKey);
 	}
 }
 
@@ -302,11 +292,11 @@ void RTTController::TumbleExecute(int deltaX, int deltaY)
 		m_mouseMessage.dragButton		= LButtonDrag;
 		m_mouseMessage.dragStartPos.x	= m_currentPos.x + windowRect.left;
 		m_mouseMessage.dragStartPos.y	= m_currentPos.y + windowRect.top;
-		m_currentPos.x					+= deltaX;
-		m_currentPos.y					+= deltaY;
+		//m_currentPos.x					+= deltaX;
+		//m_currentPos.y					+= deltaY;
 
-		m_mouseMessage.dragEndPos.x = m_currentPos.x + windowRect.left;
-		m_mouseMessage.dragEndPos.y = m_currentPos.y + windowRect.top;
+		m_mouseMessage.dragEndPos.x = m_currentPos.x + windowRect.left + deltaX;
+		m_mouseMessage.dragEndPos.y = m_currentPos.y + windowRect.top + deltaY;
 		VMMouseDrag(&m_mouseMessage, 2);
 	//}
 }
@@ -343,11 +333,11 @@ void RTTController::TrackExecute(int deltaX, int deltaY)
 	m_mouseMessage.dragButton		= MButtonDrag;
 	m_mouseMessage.dragStartPos.x	= m_currentPos.x + windowRect.left;
 	m_mouseMessage.dragStartPos.y	= m_currentPos.y + windowRect.top;
-	m_currentPos.x					+= deltaX;
-	m_currentPos.y					+= deltaY;
+	//m_currentPos.x					+= deltaX;
+	//m_currentPos.y					+= deltaY;
 
-	m_mouseMessage.dragEndPos.x = m_currentPos.x + windowRect.left;
-	m_mouseMessage.dragEndPos.y = m_currentPos.y + windowRect.top;
+	m_mouseMessage.dragEndPos.x = m_currentPos.x + windowRect.left + deltaX;
+	m_mouseMessage.dragEndPos.y = m_currentPos.y + windowRect.top + deltaY;
 	VMMouseDrag(&m_mouseMessage);
 }
 
@@ -384,18 +374,13 @@ void RTTController::DollyExecute(int deltaX, int deltaY)
 	m_mouseMessage.dragButton		= RButtonDrag;
 	m_mouseMessage.dragStartPos.x	= m_currentPos.x + windowRect.left;
 	m_mouseMessage.dragStartPos.y	= m_currentPos.y + windowRect.top;
-	m_currentPos.x					+= deltaX;
-	m_currentPos.y					+= deltaY;
+	//m_currentPos.x					+= deltaX;
+	//m_currentPos.y					+= deltaY;
 
-	m_mouseMessage.dragEndPos.x = m_currentPos.x + windowRect.left;
-	m_mouseMessage.dragEndPos.y = m_currentPos.y + windowRect.top;
+	m_mouseMessage.dragEndPos.x = m_currentPos.x + windowRect.left + deltaX;
+	m_mouseMessage.dragEndPos.y = m_currentPos.y + windowRect.top + deltaY;
 	VMMouseDrag(&m_mouseMessage);
 }
-
-//void RTTController::HotkeyExecute(I4C3DContext* pContext, PCTSTR szCommand) const
-//{
-//	I4C3DControl::HotkeyExecute(pContext, m_hTargetTopWnd, szCommand);
-//}
 
 /**
  * @brief
@@ -502,25 +487,6 @@ BOOL CALLBACK EnumChildProcForKeyInput(HWND hWnd, LPARAM lParam)
 	}
 	return TRUE;
 }
-
-//BOOL CALLBACK EnumChildProcForKeyInput(HWND hWnd, LPARAM lParam)
-//{
-//	static int count = 0;		// TODO Delete
-//
-//	TCHAR szWindowTitle[BUFFER_SIZE];
-//	GetWindowText(hWnd, szWindowTitle, _countof(szWindowTitle));
-//	
-//	if (!_tcsicmp(g_szChildWindowTitle, szWindowTitle) /*&& !_tcsicmp(_T("QWidget"), szClassTitle)*/) {
-//		*(HWND*)lParam = hWnd;
-//		count++;
-//		
-//		if (count == 2) {
-//			count = 0;
-//			return FALSE;
-//		}
-//	}
-//	return TRUE;
-//}
 
 BOOL CALLBACK EnumChildProcForMouseInput(HWND hWnd, LPARAM lParam)
 {
