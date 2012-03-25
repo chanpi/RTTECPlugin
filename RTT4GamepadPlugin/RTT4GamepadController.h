@@ -1,23 +1,30 @@
 #pragma once
 
 #include "VirtualMotion.h"
+#include "CADController.h"
 #include "MacroPlugin.h"
+#include "RTT4GamepadCameraMonitor.h"
+
 class I4C3DCursor;
 
-class RTTController : public MacroPlugin
+class RTT4GamepadController : public CADController, public MacroPlugin
 {
 public:
-	RTTController(void);
-	~RTTController(void);
+	RTT4GamepadController(void);
+	virtual ~RTT4GamepadController(void);
 
-	BOOL Initialize(LPCSTR szBuffer, char* termination);
-	void Execute(HWND hWnd, LPCSTR szCommand, double deltaX, double deltaY);
+	BOOL Initialize(LPCSTR szBuffer, char* termination, USHORT uRTTPort);
+	void UnInitialize(void);
+	virtual void Execute(HWND hWnd, LPCSTR szCommand, double deltaX, double deltaY);
 	void ModKeyUp(void);
 
 protected:
-	void TumbleExecute(int deltaX, int deltaY);
-	void TrackExecute(int deltaX, int deltaY);
-	void DollyExecute(int deltaX, int deltaY);
+	RTTContext m_rttContext;
+
+	virtual void TumbleExecute(int deltaX, int deltaY);
+	virtual void TrackExecute(int deltaX, int deltaY);
+	virtual void DollyExecute(int deltaX, int deltaY);
+	virtual void OriginalCommandExecute(LPCSTR command);
 
 	BOOL InitializeModifierKeys(PCSTR szModifierKeys);
 	BOOL GetTargetChildWnd(void);
@@ -45,8 +52,5 @@ protected:
 	double m_fDollyRate;
 
 	I4C3DCursor* m_pCursor;
-
-
-	void Exit();
 };
 

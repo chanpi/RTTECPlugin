@@ -4,12 +4,12 @@ class MacroPlugin
 {
 public:
 	MacroPlugin(void);
-	~MacroPlugin(void);
+	virtual ~MacroPlugin(void);
 
 	virtual BOOL RegisterMacro(LPCSTR szBuffer, char* termination);
 	virtual void PlayMacro(LPCSTR macroName, HWND hKeyInputWnd, BOOL bUsePostMessageToSendKey);
 
-private:
+protected:
 	virtual BOOL AnalyzeMacro(LPCSTR macroName, LPCSTR macroValue);
 };
 

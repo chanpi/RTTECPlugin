@@ -1,12 +1,11 @@
-// RTTPlugin.cpp : アプリケーションのエントリ ポイントを定義します。
+// RTT4GamepadPlugin.cpp : アプリケーションのエントリ ポイントを定義します。
 //
 
 #include "stdafx.h"
-#include "RTTPlugin.h"
-#include "RTTController.h"
+#include "RTT4GamepadPlugin.h"
+#include "RTT4GamepadController.h"
 #include "Miscellaneous.h"
 #include "I4C3DCommon.h"
-#include <WinSock2.h>
 #include <ShellAPI.h>
 
 #include <cstdlib>	// 必要
@@ -22,15 +21,17 @@
 #define TIMER_ID		1
 
 const int BUFFER_SIZE = 256;
-static const PCSTR COMMAND_INIT	= "init";
-static const PCSTR COMMAND_EXIT	= "exit";
-static const PCSTR COMMAND_REGISTERMACRO = "registermacro";
+static const PCSTR COMMAND_INIT				= "init";
+static const PCSTR COMMAND_EXIT				= "exit";
+static const PCSTR COMMAND_REGISTERMACRO	= "registermacro";
+static const PCSTR COMMAND_POSORIENT		= "POSORIENT";
 
 // グローバル変数:
 HINSTANCE hInst;								// 現在のインターフェイス
 TCHAR szTitle[MAX_LOADSTRING];					// タイトル バーのテキスト
 TCHAR szWindowClass[MAX_LOADSTRING];			// メイン ウィンドウ クラス名
 static USHORT g_uPort = 0;
+static USHORT g_uRTTPort = 0;
 
 // このコード モジュールに含まれる関数の宣言を転送します:
 ATOM				MyRegisterClass(HINSTANCE hInstance);
@@ -61,7 +62,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
 	// グローバル文字列を初期化しています。
 	LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-	LoadString(hInstance, IDC_RTTPLUGIN, szWindowClass, MAX_LOADSTRING);
+	LoadString(hInstance, IDC_RTT4GamepadPlugin, szWindowClass, MAX_LOADSTRING);
 
 	if (!ExecuteOnce(szTitle)) {
 		return EXIT_SUCCESS;
@@ -72,14 +73,16 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	int argc = 0;
 	LPTSTR *argv = NULL;
 	argv = CommandLineToArgvW(GetCommandLine(), &argc);
-	if (argc != 2) {
-		MessageBox(NULL, _T("[ERROR] 引数が足りません[例: RTTPlugin.exe 10001]。<RTTPlugin>"), szTitle, MB_OK | MB_ICONERROR);
+	if (argc != 3) {
+		MessageBox(NULL, _T("[ERROR] 引数が足りません[例: RTT4GamepadPlugin.exe 10001 3333]。<RTT4GamepadPlugin>"), szTitle, MB_OK | MB_ICONERROR);
 		LocalFree(argv);
 		CleanupMutex();
 		return EXIT_FAILURE;
 	}
 	g_uPort = static_cast<USHORT>(_wtoi(argv[1]));
 	OutputDebugString(argv[1]);
+	g_uRTTPort = static_cast<USHORT>(_wtoi(argv[2]));
+	OutputDebugString(argv[2]);
 	LocalFree(argv);
 
 	static WSAData wsaData;
@@ -120,7 +123,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		return FALSE;
 	}
 
-	hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_RTTPLUGIN));
+	hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_RTT4GamepadPlugin));
 
 	// メイン メッセージ ループ:
 	while (GetMessage(&msg, NULL, 0, 0))
@@ -165,10 +168,10 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 	wcex.cbClsExtra		= 0;
 	wcex.cbWndExtra		= 0;
 	wcex.hInstance		= hInstance;
-	wcex.hIcon			= LoadIcon(hInstance, MAKEINTRESOURCE(IDI_RTTPLUGIN));
+	wcex.hIcon			= LoadIcon(hInstance, MAKEINTRESOURCE(IDI_RTT4GamepadPlugin));
 	wcex.hCursor		= LoadCursor(NULL, IDC_ARROW);
 	wcex.hbrBackground	= (HBRUSH)(COLOR_WINDOW+1);
-	wcex.lpszMenuName	= MAKEINTRESOURCE(IDC_RTTPLUGIN);
+	wcex.lpszMenuName	= MAKEINTRESOURCE(IDC_RTT4GamepadPlugin);
 	wcex.lpszClassName	= szWindowClass;
 	wcex.hIconSm		= LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
@@ -225,7 +228,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	static DWORD counter = 0;
 	static BOOL doCount = FALSE;
 
-	static RTTController controller;
+	static RTT4GamepadController controller;
 	static SOCKET socketHandler = INVALID_SOCKET;
 	I4C3DUDPPacket packet = {0};
 	char szCommand[32] = {0};
@@ -248,7 +251,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case FD_READ:
 			nBytes = recv(socketHandler, (char*)&packet, sizeof(packet), 0);
 			if (nBytes == SOCKET_ERROR) {
-				_stprintf_s(szError, _countof(szError), _T("recv() : %d <RTTPlugin>"), WSAGetLastError());
+				_stprintf_s(szError, _countof(szError), _T("recv() : %d <RTT4GamepadPlugin>"), WSAGetLastError());
 				LogDebugMessage(Log_Error, szError);
 				//ReportError(szError);
 				break;
@@ -265,18 +268,27 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 			} else if (scanCount == 1) {
 				if (_strcmpi(szCommand, COMMAND_INIT) == 0) {
-					if (!controller.Initialize(packet.szCommand, &cTermination)) {
+					if (!controller.Initialize(packet.szCommand, &cTermination, g_uRTTPort)) {
 						_stprintf_s(szError, _countof(szError), _T("RTTコントローラの初期化に失敗しています。"));
 						ReportError(szError);
 					}
 				} else if (_strcmpi(szCommand, COMMAND_EXIT) == 0) {
 					OutputDebugString(_T("exit\n"));
+					controller.UnInitialize();
 					DestroyWindow(hWnd);
-				} else if (_strcmpi(szCommand, COMMAND_REGISTERMACRO) == 0) {	// ショートカットキー
+
+				// RTT4TCP用コマンド
+				} else if (_strcmpi(szCommand, COMMAND_POSORIENT) == 0) {
+					controller.Execute(hTargetWnd, packet.szCommand, deltaX, deltaY);	// POSORIENT ...
+
+				// マクロの登録
+				} else if (_strcmpi(szCommand, COMMAND_REGISTERMACRO) == 0) {
 					if (!controller.RegisterMacro(packet.szCommand, &cTermination)) {
 						_stprintf_s(szError, _countof(szError), _T("RTTコントローラのマクロの登録に失敗しています。"));
 						ReportError(szError);
 					}
+
+				// マクロの実行
 				} else {
 					controller.Execute(hTargetWnd, szCommand, 0, 0);
 					Sleep(1);
@@ -385,7 +397,7 @@ SOCKET InitializeController(HWND hWnd, USHORT uPort)
 	}
 
 	if (WSAAsyncSelect(socketHandler, hWnd, MY_WINSOCKSELECT, FD_READ) == SOCKET_ERROR) {
-		TCHAR* szError = _T("ソケットイベント通知設定に失敗しました。<RTTPlugin::InitializeController>");
+		TCHAR* szError = _T("ソケットイベント通知設定に失敗しました。<RTT4GamepadPlugin::InitializeController>");
 		//ReportError(szError);
 		LogDebugMessage(Log_Error, szError);
 	}

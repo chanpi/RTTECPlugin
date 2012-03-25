@@ -13,7 +13,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{7ECF7A55-74BA-4989-A05C-A97EB42C972A}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>RTTPlugin</RootNamespace>
+    <RootNamespace>RTT4GamepadPlugin</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -81,30 +81,36 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
-    <None Include="RTTPlugin.ico" />
+    <None Include="RTT4GamepadPlugin.ico" />
     <None Include="small.ico" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CADController.h" />
     <ClInclude Include="I4C3DCursor.h" />
     <ClInclude Include="MacroPlugin.h" />
     <ClInclude Include="Resource.h" />
-    <ClInclude Include="RTTController.h" />
-    <ClInclude Include="RTTPlugin.h" />
+    <ClInclude Include="RTT4GamepadAccessor.h" />
+    <ClInclude Include="RTT4GamepadCameraMonitor.h" />
+    <ClInclude Include="RTT4GamepadController.h" />
+    <ClInclude Include="RTT4GamepadPlugin.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CADController.cpp" />
     <ClCompile Include="I4C3DCursor.cpp" />
     <ClCompile Include="MacroPlugin.cpp" />
-    <ClCompile Include="RTTController.cpp" />
-    <ClCompile Include="RTTPlugin.cpp" />
+    <ClCompile Include="RTT4GamepadAccessor.cpp" />
+    <ClCompile Include="RTT4GamepadCameraMonitor.cpp" />
+    <ClCompile Include="RTT4GamepadController.cpp" />
+    <ClCompile Include="RTT4GamepadPlugin.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="RTTPlugin.rc" />
+    <ResourceCompile Include="RTT4GamepadPlugin.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
