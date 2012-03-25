@@ -6,10 +6,10 @@ public:
 	MacroPlugin(void);
 	~MacroPlugin(void);
 
-	BOOL RegisterMacro(LPCSTR szBuffer, char* termination);
-	void PlayMacro(LPCSTR macroName, HWND hKeyInputWnd, BOOL bUsePostMessageToSendKey);
+	virtual BOOL RegisterMacro(LPCSTR szBuffer, char* termination);
+	virtual void PlayMacro(LPCSTR macroName, HWND hKeyInputWnd, BOOL bUsePostMessageToSendKey);
 
 private:
-	BOOL AnalyzeMacro(LPCSTR macroName, LPCSTR macroValue);
+	virtual BOOL AnalyzeMacro(LPCSTR macroName, LPCSTR macroValue);
 };
 

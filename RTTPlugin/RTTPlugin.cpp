@@ -31,7 +31,6 @@ HINSTANCE hInst;								// 現在のインターフェイス
 TCHAR szTitle[MAX_LOADSTRING];					// タイトル バーのテキスト
 TCHAR szWindowClass[MAX_LOADSTRING];			// メイン ウィンドウ クラス名
 static USHORT g_uPort = 0;
-static USHORT g_uRTTPort = 0;
 
 // このコード モジュールに含まれる関数の宣言を転送します:
 ATOM				MyRegisterClass(HINSTANCE hInstance);
@@ -73,16 +72,14 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	int argc = 0;
 	LPTSTR *argv = NULL;
 	argv = CommandLineToArgvW(GetCommandLine(), &argc);
-	if (argc != 3) {
-		MessageBox(NULL, _T("[ERROR] 引数が足りません[例: RTTPlugin.exe 10001 3333]。<RTTPlugin>"), szTitle, MB_OK | MB_ICONERROR);
+	if (argc != 2) {
+		MessageBox(NULL, _T("[ERROR] 引数が足りません[例: RTTPlugin.exe 10001]。<RTTPlugin>"), szTitle, MB_OK | MB_ICONERROR);
 		LocalFree(argv);
 		CleanupMutex();
 		return EXIT_FAILURE;
 	}
 	g_uPort = static_cast<USHORT>(_wtoi(argv[1]));
 	OutputDebugString(argv[1]);
-	g_uRTTPort = static_cast<USHORT>(_wtoi(argv[2]));
-	OutputDebugString(argv[2]);
 	LocalFree(argv);
 
 	static WSAData wsaData;
@@ -395,41 +392,6 @@ SOCKET InitializeController(HWND hWnd, USHORT uPort)
 
 	return socketHandler;
 }
-
-//SOCKET InitializeRTTOriginalController(HWND hWnd, USHORT uPort)
-//{
-//	SOCKET socketHandler;
-//	SOCKADDR_IN address;
-//	TCHAR szError[BUFFER_SIZE];
-//	int nResult = 0;
-//
-//	socketHandler = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-//	if (socketHandler == INVALID_SOCKET) {
-//		_stprintf_s(szError, _countof(szError), _T("[ERROR] socket() : %d"), WSAGetLastError());
-//		LogDebugMessage(Log_Error, szError);
-//		return INVALID_SOCKET;
-//	}
-//
-//	address.sin_family = AF_INET;
-//	address.sin_port = htons(uPort);
-//	address.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
-//
-//	nResult = connect(socketHandler, (const sockaddr*)&address, sizeof(address));
-//	if (nResult == SOCKET_ERROR) {
-//		_stprintf_s(szError, _countof(szError), _T("[ERROR] connect() : %d"), WSAGetLastError());
-//		LogDebugMessage(Log_Error, szError);
-//		closesocket(socketHandler);
-//		return INVALID_SOCKET;
-//	}
-//
-//	if (WSAAsyncSelect(socketHandler, hWnd, MY_WINSOCKSELECT_RTT, FD_READ) == SOCKET_ERROR) {
-//		TCHAR* szError = _T("ソケットイベント通知設定に失敗しました。<RTTPlugin::InitializeController>");
-//		//ReportError(szError);
-//		LogDebugMessage(Log_Error, szError);
-//	}
-//
-//	return socketHandler;
-//}
 
 void UnInitializeController(SOCKET socketHandler)
 {
