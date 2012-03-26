@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "RTT4ECAccessor.h"
 #include "Miscellaneous.h"
+#include "RTT4ECCommon.h"
 
 const int BUFFER_SIZE = 256;
 
@@ -52,5 +53,56 @@ BOOL RTT4ECAccessor::SetConnectingSocket(const SOCKET& socketHandler, const stru
 		closesocket(socketHandler);
 		return FALSE;
 	}
+	return TRUE;
+}
+
+BOOL RTT4ECAccessor::RTT4ECSend(RTT4ECContext* pContext, LPCSTR lpszCommand) {
+	static unsigned int counter = 0;
+	int nResult = 0;
+
+	//if(pContext->processorContext.bIsBusy){
+	//	return TRUE;
+	//}
+
+	if (pContext->socketHandler == INVALID_SOCKET ||
+		pContext->socketHandler == 0) {
+		//RBReportError(_T("Invalid Socket\n"));
+		OutputDebugString(_T("Invalid Socket <RTT4ECAccessor::RTT4ECRecv>\n"));
+		return FALSE;
+	}
+		
+	nResult = send(pContext->socketHandler, lpszCommand, strlen(lpszCommand), 0);
+	if (nResult == SOCKET_ERROR) {
+		TCHAR szError[BUFFER_SIZE] = {0};
+		_stprintf_s(szError, _countof(szError), _T("[ERROR] send(). Error No. %d <RTT4ECAccessor::RTT4ECSend>"), GetLastError());
+		LogDebugMessage(Log_Error, szError);
+		return FALSE;
+	}
+	
+	return TRUE;
+}
+
+BOOL RTT4ECAccessor::RTT4ECRecv(RTT4ECContext* pContext, LPSTR lpszCommand, int nLength) {
+	int nResult = 0;
+
+	//if(pContext->processorContext.bIsBusy){
+	//	return TRUE;
+	//}
+	
+	if (pContext->socketHandler == INVALID_SOCKET ||
+		pContext->socketHandler == 0) {
+		//RBReportError(_T("Invalid Socket\n"));
+		OutputDebugString(_T("Invalid Socket <RTT4ECAccessor::RTT4ECRecv>\n"));
+		return FALSE;
+	}
+
+	nResult = recv(pContext->socketHandler, lpszCommand, nLength, 0);
+	if (nResult == SOCKET_ERROR) {
+		TCHAR szError[BUFFER_SIZE] = {0};
+		_stprintf_s(szError, _countof(szError), _T("[ERROR] recv(). Error No. %d <RTT4ECAccessor::RTT4ECRecv>"), GetLastError());
+		LogDebugMessage(Log_Error, szError);
+		return FALSE;
+	}
+
 	return TRUE;
 }

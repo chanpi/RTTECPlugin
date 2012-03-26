@@ -86,11 +86,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\RTTPlugin\RTTPlugin\CADController.h" />
-    <ClInclude Include="..\..\RTTPlugin\RTTPlugin\MacroPlugin.h" />
     <ClInclude Include="I4C3DCursor.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="RTT4ECAccessor.h" />
     <ClInclude Include="RTT4ECCameraMonitor.h" />
+    <ClInclude Include="RTT4ECCommon.h" />
     <ClInclude Include="RTT4ECController.h" />
     <ClInclude Include="RTT4ECPlugin.h" />
     <ClInclude Include="stdafx.h" />
@@ -98,7 +98,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\RTTPlugin\RTTPlugin\CADController.cpp" />
-    <ClCompile Include="..\..\RTTPlugin\RTTPlugin\MacroPlugin.cpp" />
     <ClCompile Include="I4C3DCursor.cpp" />
     <ClCompile Include="RTT4ECAccessor.cpp" />
     <ClCompile Include="RTT4ECCameraMonitor.cpp" />

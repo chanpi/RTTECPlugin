@@ -18,12 +18,10 @@
 #endif
 
 #define MAX_LOADSTRING	100
-#define TIMER_ID		1
 
 const int BUFFER_SIZE = 256;
 static const PCSTR COMMAND_INIT				= "init";
 static const PCSTR COMMAND_EXIT				= "exit";
-static const PCSTR COMMAND_REGISTERMACRO	= "registermacro";
 static const PCSTR COMMAND_POSORIENT		= "POSORIENT";
 
 // グローバル変数:
@@ -74,7 +72,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	LPTSTR *argv = NULL;
 	argv = CommandLineToArgvW(GetCommandLine(), &argc);
 	if (argc != 3) {
-		MessageBox(NULL, _T("[ERROR] 引数が足りません[例: RTT4ECPlugin.exe 10001 3333]。<RTT4ECPlugin>"), szTitle, MB_OK | MB_ICONERROR);
+		MessageBox(NULL, _T("[ERROR] 引数が足りません[例: RTT4ECPlugin.exe 10005 3333]。<RTT4ECPlugin>"), szTitle, MB_OK | MB_ICONERROR);
 		LocalFree(argv);
 		CleanupMutex();
 		return EXIT_FAILURE;
@@ -224,16 +222,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	PAINTSTRUCT ps;
 	HDC hdc;
 
-	const int timer_interval = 100;
-	static DWORD counter = 0;
-	static BOOL doCount = FALSE;
-
 	static RTT4ECController controller;
 	static SOCKET socketHandler = INVALID_SOCKET;
 	I4C3DUDPPacket packet = {0};
 	char szCommand[32] = {0};
-	double deltaX = 0;
-	double deltaY = 0;
 	static char cTermination = '?';
 
 	int nBytes = 0;
@@ -243,7 +235,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 	case WM_CREATE:
 		socketHandler = InitializeController(hWnd, g_uPort);
-		SetTimer(hWnd, TIMER_ID, timer_interval, NULL);
 		break;
 
 	case MY_WINSOCKSELECT:
@@ -261,15 +252,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			HWND hTargetWnd = 0;
 			int scanCount = AnalyzeMessage(&packet, &hTargetWnd, szCommand, _countof(szCommand), &deltaX, &deltaY, cTermination);
 			if (scanCount == 3) {
-				counter = 0;
 				controller.Execute(hTargetWnd, szCommand, deltaX, deltaY);
 				Sleep(1);
-				doCount = TRUE;
 
 			} else if (scanCount == 1) {
 				if (_strcmpi(szCommand, COMMAND_INIT) == 0) {
 					if (!controller.Initialize(packet.szCommand, &cTermination, g_uRTTPort)) {
-						_stprintf_s(szError, _countof(szError), _T("RTTコントローラの初期化に失敗しています。"));
+						_stprintf_s(szError, _countof(szError), _T("RTT4ECコントローラの初期化に失敗しています。"));
 						ReportError(szError);
 					}
 				} else if (_strcmpi(szCommand, COMMAND_EXIT) == 0) {
@@ -281,29 +270,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				} else if (_strcmpi(szCommand, COMMAND_POSORIENT) == 0) {
 					controller.Execute(hTargetWnd, packet.szCommand, deltaX, deltaY);	// POSORIENT ...
 
-				// マクロの登録
-				} else if (_strcmpi(szCommand, COMMAND_REGISTERMACRO) == 0) {
-					if (!controller.RegisterMacro(packet.szCommand, &cTermination)) {
-						_stprintf_s(szError, _countof(szError), _T("RTTコントローラのマクロの登録に失敗しています。"));
-						ReportError(szError);
-					}
-
-				// マクロの実行
-				} else {
-					controller.Execute(hTargetWnd, szCommand, 0, 0);
-					Sleep(1);
-					doCount = TRUE;
 				}
-			}
-		}
-		break;
-
-	case WM_TIMER:
-		if (doCount) {
-			counter += timer_interval;
-			if (cancelKeyDownMillisec < counter) {
-				controller.ModKeyUp();
-				doCount = FALSE;
 			}
 		}
 		break;
