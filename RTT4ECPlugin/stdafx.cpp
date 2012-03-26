@@ -1,4 +1,4 @@
-// stdafx.cpp : 標準インクルード RTT4GamepadPlugin.pch のみを
+// stdafx.cpp : 標準インクルード RTT4ECPlugin.pch のみを
 // 含むソース ファイルは、プリコンパイル済みヘッダーになります。
 // stdafx.obj にはプリコンパイル済み型情報が含まれます。
 

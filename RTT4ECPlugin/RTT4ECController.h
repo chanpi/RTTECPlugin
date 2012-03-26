@@ -3,15 +3,15 @@
 #include "VirtualMotion.h"
 #include "CADController.h"
 #include "MacroPlugin.h"
-#include "RTT4GamepadCameraMonitor.h"
+#include "RTT4ECCameraMonitor.h"
 
 class I4C3DCursor;
 
-class RTT4GamepadController : public CADController, public MacroPlugin
+class RTT4ECController : public CADController, public MacroPlugin
 {
 public:
-	RTT4GamepadController(void);
-	virtual ~RTT4GamepadController(void);
+	RTT4ECController(void);
+	virtual ~RTT4ECController(void);
 
 	BOOL Initialize(LPCSTR szBuffer, char* termination, USHORT uRTTPort);
 	void UnInitialize(void);

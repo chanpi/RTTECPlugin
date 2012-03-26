@@ -1,6 +1,6 @@
 #include "StdAfx.h"
-#include "RTT4GamepadController.h"
-#include "RTT4GamepadAccessor.h"
+#include "RTT4ECController.h"
+#include "RTT4ECAccessor.h"
 #include "I4C3DKeysHook.h"
 #include "I4C3DCommon.h"
 #include "I4C3DCursor.h"
@@ -27,7 +27,7 @@ const PCSTR COMMAND_POSORIENT	= "POSORIENT";
 const PCSTR INITIALIZE_MESSAGE	= "SUBSCRIBE CAMERA";
 
 
-RTT4GamepadController::RTT4GamepadController(void)
+RTT4ECController::RTT4ECController(void)
 {
 	m_hTargetTopWnd		= NULL;
 	m_hKeyInputWnd		= NULL;
@@ -51,7 +51,7 @@ RTT4GamepadController::RTT4GamepadController(void)
 	m_pCursor		= new I4C3DCursor;
 }
 
-RTT4GamepadController::~RTT4GamepadController(void)
+RTT4ECController::~RTT4ECController(void)
 {
 	ModKeyUp();
 	UnHook();
@@ -76,7 +76,7 @@ RTT4GamepadController::~RTT4GamepadController(void)
  * InitializeModifierKeys()
  */
 
-BOOL RTT4GamepadController::Initialize(LPCSTR szBuffer, char* termination, USHORT uRTTPort)
+BOOL RTT4ECController::Initialize(LPCSTR szBuffer, char* termination, USHORT uRTTPort)
 {
 	char tmpCommand[BUFFER_SIZE] = {0};
 	char szModKeys[BUFFER_SIZE] = {0};
@@ -99,10 +99,10 @@ BOOL RTT4GamepadController::Initialize(LPCSTR szBuffer, char* termination, USHOR
 	}
 
 	// TCPソケットの作成
-	RTT4GamepadAccessor accessor;
+	RTT4ECAccessor accessor;
 	m_rttContext.socketHandler = accessor.InitializeTCPSocket(&m_rttContext.address, "127.0.0.1", TRUE, uRTTPort);
 	if (m_rttContext.socketHandler == INVALID_SOCKET) {
-		LogDebugMessage(Log_Error, _T("InitializeSocket <RTT4GamepadController::Initialize>"));
+		LogDebugMessage(Log_Error, _T("InitializeSocket <RTT4ECController::Initialize>"));
 		return FALSE;
 	}
 	if (!accessor.SetConnectingSocket(m_rttContext.socketHandler, &m_rttContext.address)) {
@@ -115,7 +115,7 @@ BOOL RTT4GamepadController::Initialize(LPCSTR szBuffer, char* termination, USHOR
 	return InitializeModifierKeys(szModKeys);
 }
 
-void RTT4GamepadController::UnInitialize(void)
+void RTT4ECController::UnInitialize(void)
 {
 	if (m_rttContext.socketHandler != INVALID_SOCKET) {
 		closesocket(m_rttContext.socketHandler);
@@ -138,7 +138,7 @@ void RTT4GamepadController::UnInitialize(void)
  * @see
  * AddHookedKeyCode()
  */
-BOOL RTT4GamepadController::InitializeModifierKeys(PCSTR szModifierKeys)
+BOOL RTT4ECController::InitializeModifierKeys(PCSTR szModifierKeys)
 {
 	if (_strcmpi(szModifierKeys, "NULL") == 0 || szModifierKeys == NULL) {
 		LogDebugMessage(Log_Error, _T("修飾キーが指定されなかったため、Altキーに設定しました。"));
@@ -183,13 +183,13 @@ BOOL RTT4GamepadController::InitializeModifierKeys(PCSTR szModifierKeys)
 }
 
 
-BOOL RTT4GamepadController::GetTargetChildWnd(void)
+BOOL RTT4ECController::GetTargetChildWnd(void)
 {
 	// キー入力ウィンドウを取得
 	m_hKeyInputWnd = NULL;
 	EnumChildWindows(m_hTargetTopWnd, EnumChildProcForKeyInput, (LPARAM)&m_hKeyInputWnd);
 	if (m_hKeyInputWnd == NULL) {
-		LogDebugMessage(Log_Error, _T("キー入力ウィンドウが取得できません。<RTT4GamepadController::GetTargetChildWnd>"));
+		LogDebugMessage(Log_Error, _T("キー入力ウィンドウが取得できません。<RTT4ECController::GetTargetChildWnd>"));
 		return FALSE;
 	}
 
@@ -197,7 +197,7 @@ BOOL RTT4GamepadController::GetTargetChildWnd(void)
 	m_hMouseInputWnd = NULL;
 	EnumChildWindows(m_hKeyInputWnd, EnumChildProcForMouseInput, (LPARAM)&m_hMouseInputWnd);
 	if (m_hMouseInputWnd == NULL) {
-		LogDebugMessage(Log_Error, _T("マウス入力ウィンドウが取得できません。<RTT4GamepadController::GetTargetChildWnd>"));
+		LogDebugMessage(Log_Error, _T("マウス入力ウィンドウが取得できません。<RTT4ECController::GetTargetChildWnd>"));
 		return FALSE;
 	}
 	return TRUE;
@@ -206,17 +206,17 @@ BOOL RTT4GamepadController::GetTargetChildWnd(void)
 // コメントアウト 2011.06.10
 // GetTargetChildWndとで二重チェックになってしまうため。
 // GetTargetChildWndとAdjustCursorPosを使用
-//BOOL RTT4GamepadController::CheckTargetState(void)
+//BOOL RTT4ECController::CheckTargetState(void)
 //{
 //	if (m_hTargetTopWnd == NULL) {
-//		//ReportError(_T("ターゲットウィンドウが取得できません。<RTT4GamepadController::CheckTargetState>"));
-//		LogDebugMessage(Log_Error, _T("ターゲットウィンドウが取得できません。<RTT4GamepadController::CheckTargetState>"));
+//		//ReportError(_T("ターゲットウィンドウが取得できません。<RTT4ECController::CheckTargetState>"));
+//		LogDebugMessage(Log_Error, _T("ターゲットウィンドウが取得できません。<RTT4ECController::CheckTargetState>"));
 //
 //	} else if (m_hKeyInputWnd == NULL) {
-//		LogDebugMessage(Log_Error, _T("キー入力ウィンドウが取得できません。<RTT4GamepadController::CheckTargetState>"));
+//		LogDebugMessage(Log_Error, _T("キー入力ウィンドウが取得できません。<RTT4ECController::CheckTargetState>"));
 //
 //	} else if (m_hMouseInputWnd == NULL) {
-//		LogDebugMessage(Log_Error, _T("マウス入力ウィンドウが取得できません。<RTT4GamepadController::CheckTargetState>"));
+//		LogDebugMessage(Log_Error, _T("マウス入力ウィンドウが取得できません。<RTT4ECController::CheckTargetState>"));
 //
 //	} else {
 //		return TRUE;
@@ -225,7 +225,7 @@ BOOL RTT4GamepadController::GetTargetChildWnd(void)
 //	return FALSE;
 //}
 
-void RTT4GamepadController::AdjustCursorPos(RECT* pWindowRect)
+void RTT4ECController::AdjustCursorPos(RECT* pWindowRect)
 {
 	// ターゲットウィンドウの位置のチェック
 	POINT tmpCurrentPos = m_currentPos;
@@ -255,7 +255,7 @@ void RTT4GamepadController::AdjustCursorPos(RECT* pWindowRect)
 	}
 }
 
-void RTT4GamepadController::Execute(HWND hWnd, LPCSTR szCommand, double deltaX, double deltaY)
+void RTT4ECController::Execute(HWND hWnd, LPCSTR szCommand, double deltaX, double deltaY)
 {
 	if (_strcmpi(szCommand, COMMAND_POSORIENT) == 0) {
 		ModKeyUp();
@@ -313,7 +313,7 @@ void RTT4GamepadController::Execute(HWND hWnd, LPCSTR szCommand, double deltaX, 
  * 本バージョンでうまく動作しない場合は、RTTDeltaGen_OLD.cppを使用してください
  * （修飾キーがAltとCtrlのときとで処理を分岐してあります）。
  */
-void RTT4GamepadController::TumbleExecute(int deltaX, int deltaY)
+void RTT4ECController::TumbleExecute(int deltaX, int deltaY)
 {
 	//if (CheckTargetState()) {
 		RECT windowRect = {0};
@@ -334,7 +334,7 @@ void RTT4GamepadController::TumbleExecute(int deltaX, int deltaY)
 	//}
 }
 
-void RTT4GamepadController::TrackExecute(int deltaX, int deltaY)
+void RTT4ECController::TrackExecute(int deltaX, int deltaY)
 {
 	////if (CheckTargetState()) {
 	//	AdjustCursorPos(NULL);
@@ -374,7 +374,7 @@ void RTT4GamepadController::TrackExecute(int deltaX, int deltaY)
 	VMMouseDrag(&m_mouseMessage);
 }
 
-void RTT4GamepadController::DollyExecute(int deltaX, int deltaY)
+void RTT4ECController::DollyExecute(int deltaX, int deltaY)
 {
 	////if (CheckTargetState()) {
 	//	AdjustCursorPos(NULL);
@@ -415,7 +415,7 @@ void RTT4GamepadController::DollyExecute(int deltaX, int deltaY)
 	VMMouseDrag(&m_mouseMessage);
 }
 
-void RTT4GamepadController::OriginalCommandExecute(LPCSTR command)
+void RTT4ECController::OriginalCommandExecute(LPCSTR command)
 {
 	send(m_rttContext.socketHandler, command, strlen(command), 0);
 }
@@ -438,7 +438,7 @@ void RTT4GamepadController::OriginalCommandExecute(LPCSTR command)
  * @see
  * IsAllKeysDown()
  */
-BOOL RTT4GamepadController::IsModKeysDown(void)
+BOOL RTT4ECController::IsModKeysDown(void)
 {
 	int i = 0;
 	for (i = 0; i < waitModkeyDownCount; ++i) {
@@ -464,7 +464,7 @@ BOOL RTT4GamepadController::IsModKeysDown(void)
 	}
 }
 
-void RTT4GamepadController::ModKeyDown(void)
+void RTT4ECController::ModKeyDown(void)
 {
 	if (!m_bSyskeyDown) {
 		if (m_ctrl) {
@@ -488,7 +488,7 @@ void RTT4GamepadController::ModKeyDown(void)
 	}
 }
 
-void RTT4GamepadController::ModKeyUp(void)
+void RTT4ECController::ModKeyUp(void)
 {
 	if (m_bSyskeyDown) {
 		if (!SetForegroundWindow(m_hTargetTopWnd)) {

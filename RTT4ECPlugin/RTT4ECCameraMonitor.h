@@ -1,5 +1,5 @@
-#ifndef __RTT4GAMEPAD_CAMERA_MONITOR__
-#define __RTT4GAMEPAD_CAMERA_MONITOR__
+#ifndef __RTT4EC_CAMERA_MONITOR__
+#define __RTT4EC_CAMERA_MONITOR__
 
 #include "stdafx.h"
 
@@ -25,11 +25,11 @@ typedef struct RTTContext
 extern "C" {
 #endif
 
-	unsigned int __stdcall RTT4GamepadCameraMonitorThreadProc(void *pParam);
-	void RTT4GamepadFilter(LPSTR lpszCommand, void* context);
+	unsigned int __stdcall RTT4ECCameraMonitorThreadProc(void *pParam);
+	void RTT4ECFilter(LPSTR lpszCommand, void* context);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __RTT4GAMEPAD_CAMERA_MONITOR__ */
+#endif /* __RTT4EC_CAMERA_MONITOR__ */

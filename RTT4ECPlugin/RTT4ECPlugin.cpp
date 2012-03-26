@@ -1,9 +1,9 @@
-// RTT4GamepadPlugin.cpp : アプリケーションのエントリ ポイントを定義します。
+// RTT4ECPlugin.cpp : アプリケーションのエントリ ポイントを定義します。
 //
 
 #include "stdafx.h"
-#include "RTT4GamepadPlugin.h"
-#include "RTT4GamepadController.h"
+#include "RTT4ECPlugin.h"
+#include "RTT4ECController.h"
 #include "Miscellaneous.h"
 #include "I4C3DCommon.h"
 #include <ShellAPI.h>
@@ -62,7 +62,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
 	// グローバル文字列を初期化しています。
 	LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-	LoadString(hInstance, IDC_RTT4GamepadPlugin, szWindowClass, MAX_LOADSTRING);
+	LoadString(hInstance, IDC_RTT4ECPlugin, szWindowClass, MAX_LOADSTRING);
 
 	if (!ExecuteOnce(szTitle)) {
 		return EXIT_SUCCESS;
@@ -74,7 +74,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	LPTSTR *argv = NULL;
 	argv = CommandLineToArgvW(GetCommandLine(), &argc);
 	if (argc != 3) {
-		MessageBox(NULL, _T("[ERROR] 引数が足りません[例: RTT4GamepadPlugin.exe 10001 3333]。<RTT4GamepadPlugin>"), szTitle, MB_OK | MB_ICONERROR);
+		MessageBox(NULL, _T("[ERROR] 引数が足りません[例: RTT4ECPlugin.exe 10001 3333]。<RTT4ECPlugin>"), szTitle, MB_OK | MB_ICONERROR);
 		LocalFree(argv);
 		CleanupMutex();
 		return EXIT_FAILURE;
@@ -123,7 +123,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		return FALSE;
 	}
 
-	hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_RTT4GamepadPlugin));
+	hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_RTT4ECPlugin));
 
 	// メイン メッセージ ループ:
 	while (GetMessage(&msg, NULL, 0, 0))
@@ -168,10 +168,10 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 	wcex.cbClsExtra		= 0;
 	wcex.cbWndExtra		= 0;
 	wcex.hInstance		= hInstance;
-	wcex.hIcon			= LoadIcon(hInstance, MAKEINTRESOURCE(IDI_RTT4GamepadPlugin));
+	wcex.hIcon			= LoadIcon(hInstance, MAKEINTRESOURCE(IDI_RTT4ECPlugin));
 	wcex.hCursor		= LoadCursor(NULL, IDC_ARROW);
 	wcex.hbrBackground	= (HBRUSH)(COLOR_WINDOW+1);
-	wcex.lpszMenuName	= MAKEINTRESOURCE(IDC_RTT4GamepadPlugin);
+	wcex.lpszMenuName	= MAKEINTRESOURCE(IDC_RTT4ECPlugin);
 	wcex.lpszClassName	= szWindowClass;
 	wcex.hIconSm		= LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
@@ -228,7 +228,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	static DWORD counter = 0;
 	static BOOL doCount = FALSE;
 
-	static RTT4GamepadController controller;
+	static RTT4ECController controller;
 	static SOCKET socketHandler = INVALID_SOCKET;
 	I4C3DUDPPacket packet = {0};
 	char szCommand[32] = {0};
@@ -251,7 +251,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case FD_READ:
 			nBytes = recv(socketHandler, (char*)&packet, sizeof(packet), 0);
 			if (nBytes == SOCKET_ERROR) {
-				_stprintf_s(szError, _countof(szError), _T("recv() : %d <RTT4GamepadPlugin>"), WSAGetLastError());
+				_stprintf_s(szError, _countof(szError), _T("recv() : %d <RTT4ECPlugin>"), WSAGetLastError());
 				LogDebugMessage(Log_Error, szError);
 				//ReportError(szError);
 				break;
@@ -397,7 +397,7 @@ SOCKET InitializeController(HWND hWnd, USHORT uPort)
 	}
 
 	if (WSAAsyncSelect(socketHandler, hWnd, MY_WINSOCKSELECT, FD_READ) == SOCKET_ERROR) {
-		TCHAR* szError = _T("ソケットイベント通知設定に失敗しました。<RTT4GamepadPlugin::InitializeController>");
+		TCHAR* szError = _T("ソケットイベント通知設定に失敗しました。<RTT4ECPlugin::InitializeController>");
 		//ReportError(szError);
 		LogDebugMessage(Log_Error, szError);
 	}

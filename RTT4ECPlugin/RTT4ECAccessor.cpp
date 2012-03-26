@@ -1,19 +1,19 @@
 #include "StdAfx.h"
-#include "RTT4GamepadAccessor.h"
+#include "RTT4ECAccessor.h"
 #include "Miscellaneous.h"
 
 const int BUFFER_SIZE = 256;
 
-RTT4GamepadAccessor::RTT4GamepadAccessor(void)
+RTT4ECAccessor::RTT4ECAccessor(void)
 {
 }
 
 
-RTT4GamepadAccessor::~RTT4GamepadAccessor(void)
+RTT4ECAccessor::~RTT4ECAccessor(void)
 {
 }
 
-SOCKET RTT4GamepadAccessor::InitializeTCPSocket(struct sockaddr_in* pAddress, LPCSTR szAddress, BOOL bSend, USHORT uPort)
+SOCKET RTT4ECAccessor::InitializeTCPSocket(struct sockaddr_in* pAddress, LPCSTR szAddress, BOOL bSend, USHORT uPort)
 {
 	SOCKET socketHandler;
 	TCHAR szError[BUFFER_SIZE];
@@ -36,7 +36,7 @@ SOCKET RTT4GamepadAccessor::InitializeTCPSocket(struct sockaddr_in* pAddress, LP
 	return socketHandler;
 }
 
-BOOL RTT4GamepadAccessor::SetConnectingSocket(const SOCKET& socketHandler, const struct sockaddr_in* pAddress)
+BOOL RTT4ECAccessor::SetConnectingSocket(const SOCKET& socketHandler, const struct sockaddr_in* pAddress)
 {
 	BOOL bUse = TRUE;
 	setsockopt(socketHandler, SOL_SOCKET, SO_REUSEADDR, (const char*)&bUse, sizeof(bUse));
