@@ -86,7 +86,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\RTTPlugin\RTTPlugin\CADController.h" />
+    <ClInclude Include="DataNotifier.h" />
     <ClInclude Include="I4C3DCursor.h" />
+    <ClInclude Include="NotificationHelper.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="RTT4ECAccessor.h" />
     <ClInclude Include="RTT4ECCameraMonitor.h" />
@@ -98,7 +100,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\RTTPlugin\RTTPlugin\CADController.cpp" />
+    <ClCompile Include="DataNotifier.cpp" />
     <ClCompile Include="I4C3DCursor.cpp" />
+    <ClCompile Include="NotificationHelper.cpp" />
     <ClCompile Include="RTT4ECAccessor.cpp" />
     <ClCompile Include="RTT4ECCameraMonitor.cpp" />
     <ClCompile Include="RTT4ECController.cpp" />

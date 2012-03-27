@@ -2,17 +2,22 @@
 
 #include "CADController.h"
 #include "RTT4ECCommon.h"
+#include "I4C3DCommon.h"
 
 class I4C3DCursor;
 class RTT4ECAccessor;
+class DataNotifier;
 
 typedef struct {
 	volatile bool bAlive;
+	CRITICAL_SECTION lockObject;
 	HANDLE hCameraMonitorThread;
 	UINT uCameraMonitorThreadID;
 
 	RTT4ECAccessor* pAccessor;
 	RTT4ECContext* pRtt4ecContext;
+	DataNotifier* pNotifier;
+	NotifyDataFormat notifyData;
 } RTTContext;
 
 class RTT4ECController : public CADController
@@ -21,7 +26,7 @@ public:
 	RTT4ECController(void);
 	virtual ~RTT4ECController(void);
 
-	BOOL Initialize(LPCSTR szBuffer, char* termination, USHORT uRTTPort);
+	BOOL Initialize(LPCSTR szBuffer, char* termination, USHORT uRTTPort, USHORT uNotifyPort);
 	void UnInitialize(void);
 	
 	virtual void Execute(HWND hWnd, LPCSTR szCommand, double deltaX, double deltaY);

@@ -37,6 +37,24 @@ SOCKET RTT4ECAccessor::InitializeTCPSocket(struct sockaddr_in* pAddress, LPCSTR 
 	return socketHandler;
 }
 
+SOCKET RTT4ECAccessor::InitializeUDPSocket(struct sockaddr_in* pAddress, LPCSTR szAddress, USHORT uPort)
+{
+	SOCKET socketHandler = INVALID_SOCKET;
+	TCHAR szError[BUFFER_SIZE];
+
+	socketHandler = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	if (socketHandler == INVALID_SOCKET) {
+		_stprintf_s(szError, _countof(szError), _T("[ERROR] socket() : %d"), WSAGetLastError());
+		ReportError(szError);
+		LogDebugMessage(Log_Error, szError);
+		return socketHandler;
+	}
+	pAddress->sin_family = AF_INET;
+	pAddress->sin_port = htons(uPort);
+	pAddress->sin_addr.S_un.S_addr = inet_addr(szAddress);
+	return socketHandler;
+}
+
 BOOL RTT4ECAccessor::SetConnectingSocket(const SOCKET& socketHandler, const struct sockaddr_in* pAddress)
 {
 	BOOL bUse = TRUE;
@@ -60,13 +78,8 @@ BOOL RTT4ECAccessor::RTT4ECSend(RTT4ECContext* pContext, LPCSTR lpszCommand) {
 	static unsigned int counter = 0;
 	int nResult = 0;
 
-	//if(pContext->processorContext.bIsBusy){
-	//	return TRUE;
-	//}
-
 	if (pContext->socketHandler == INVALID_SOCKET ||
 		pContext->socketHandler == 0) {
-		//RBReportError(_T("Invalid Socket\n"));
 		OutputDebugString(_T("Invalid Socket <RTT4ECAccessor::RTT4ECRecv>\n"));
 		return FALSE;
 	}
@@ -83,14 +96,9 @@ BOOL RTT4ECAccessor::RTT4ECSend(RTT4ECContext* pContext, LPCSTR lpszCommand) {
 
 BOOL RTT4ECAccessor::RTT4ECRecv(RTT4ECContext* pContext, LPSTR lpszCommand, int nLength) {
 	int nResult = 0;
-
-	//if(pContext->processorContext.bIsBusy){
-	//	return TRUE;
-	//}
 	
 	if (pContext->socketHandler == INVALID_SOCKET ||
 		pContext->socketHandler == 0) {
-		//RBReportError(_T("Invalid Socket\n"));
 		OutputDebugString(_T("Invalid Socket <RTT4ECAccessor::RTT4ECRecv>\n"));
 		return FALSE;
 	}

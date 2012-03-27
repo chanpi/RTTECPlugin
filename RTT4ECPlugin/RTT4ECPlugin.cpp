@@ -30,6 +30,7 @@ TCHAR szTitle[MAX_LOADSTRING];					// タイトル バーのテキスト
 TCHAR szWindowClass[MAX_LOADSTRING];			// メイン ウィンドウ クラス名
 static USHORT g_uPort = 0;
 static USHORT g_uRTTPort = 0;
+static USHORT g_uNotifyPort = 0;
 
 // このコード モジュールに含まれる関数の宣言を転送します:
 ATOM				MyRegisterClass(HINSTANCE hInstance);
@@ -71,16 +72,18 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	int argc = 0;
 	LPTSTR *argv = NULL;
 	argv = CommandLineToArgvW(GetCommandLine(), &argc);
-	if (argc != 3) {
-		MessageBox(NULL, _T("[ERROR] 引数が足りません[例: RTT4ECPlugin.exe 10005 3333]。<RTT4ECPlugin>"), szTitle, MB_OK | MB_ICONERROR);
+	if (argc != 4) {
+		MessageBox(NULL, _T("[ERROR] 引数が足りません[例: RTT4ECPlugin.exe 10005 54321 3333]。<RTT4ECPlugin>"), szTitle, MB_OK | MB_ICONERROR);
 		LocalFree(argv);
 		CleanupMutex();
 		return EXIT_FAILURE;
 	}
 	g_uPort = static_cast<USHORT>(_wtoi(argv[1]));
 	OutputDebugString(argv[1]);
-	g_uRTTPort = static_cast<USHORT>(_wtoi(argv[2]));
+	g_uNotifyPort = static_cast<USHORT>(_wtoi(argv[2]));
 	OutputDebugString(argv[2]);
+	g_uRTTPort = static_cast<USHORT>(_wtoi(argv[3]));
+	OutputDebugString(argv[3]);
 	LocalFree(argv);
 
 	static WSAData wsaData;
@@ -245,7 +248,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			if (nBytes == SOCKET_ERROR) {
 				_stprintf_s(szError, _countof(szError), _T("recv() : %d <RTT4ECPlugin>"), WSAGetLastError());
 				LogDebugMessage(Log_Error, szError);
-				//ReportError(szError);
 				break;
 
 			}
@@ -258,7 +260,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 			} else if (scanCount == 1) {
 				if (_strcmpi(szCommand, COMMAND_INIT) == 0) {
-					if (!controller.Initialize(packet.szCommand, &cTermination, g_uRTTPort)) {
+					if (!controller.Initialize(packet.szCommand, &cTermination, g_uRTTPort, g_uNotifyPort)) {
 						_stprintf_s(szError, _countof(szError), _T("RTT4ECコントローラの初期化に失敗しています。"));
 						ReportError(szError);
 					}

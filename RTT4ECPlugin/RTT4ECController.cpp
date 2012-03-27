@@ -4,6 +4,7 @@
 #include "RTT4ECAccessor.h"
 #include "I4C3DCursor.h"
 #include "RTT4ECCameraMonitor.h"
+#include "DataNotifier.h"
 #include "Miscellaneous.h"
 #include <math.h>
 #include <float.h>
@@ -14,6 +15,7 @@ namespace {
 	const PCSTR INITIALIZE_MESSAGE	= "SUBSCRIBE CAMERA ;";
 	RTT4ECAccessor g_accessor;
 	RTT4ECContext g_rtt4ecContext = {0};
+	DataNotifier g_dataNotifier;
 
 	RTTContext g_context = {0};
 };
@@ -46,21 +48,26 @@ RTT4ECController::~RTT4ECController(void)
  * InitializeModifierKeys()
  */
 
-BOOL RTT4ECController::Initialize(LPCSTR szBuffer, char* termination, USHORT uRTTPort)
+BOOL RTT4ECController::Initialize(LPCSTR szBuffer, char* termination, USHORT uRTTPort, USHORT uNotifyPort)
 {
 	char tmpCommand[BUFFER_SIZE] = {0};
 	char szModKeys[BUFFER_SIZE] = {0};
 	double tumbleRate, trackRate, dollyRate;
 
+	// bAlive = trueにすることでプログラムが稼働出来る状態にする
 	g_context.bAlive = true;
 	sscanf_s(szBuffer, g_initCommandFormat, tmpCommand,	sizeof(tmpCommand), szModKeys, sizeof(szModKeys), &tumbleRate, &trackRate, &dollyRate, termination, sizeof(*termination));
 	m_cTermination = *termination;
+
+	// RTT4ECContextが同時に修正されるのを防ぐ
+	InitializeCriticalSection(&g_context.lockObject);
 
 	// RTTContextの初期化
 	g_context.pAccessor = &g_accessor;
 	g_context.pRtt4ecContext = &g_rtt4ecContext;
 
 	// TCPソケットの作成
+	//g_rtt4ecContext.socketHandler = g_accessor.InitializeTCPSocket(&g_rtt4ecContext.address, "127.0.0.1", TRUE, uRTTPort);
 	g_rtt4ecContext.socketHandler = g_accessor.InitializeTCPSocket(&g_rtt4ecContext.address, "192.168.1.1", TRUE, uRTTPort);
 	if (g_rtt4ecContext.socketHandler == INVALID_SOCKET) {
 		LogDebugMessage(Log_Error, _T("InitializeSocket <RTT4ECController::Initialize>"));
@@ -72,7 +79,11 @@ BOOL RTT4ECController::Initialize(LPCSTR szBuffer, char* termination, USHORT uRT
 		return FALSE;
 	}
 
-	// CAMERA情報取得のためのメッセージ送信
+	// コアへの通知用クラスを初期化
+	g_dataNotifier.Initialize("127.0.0.1", uNotifyPort);
+	g_context.pNotifier = &g_dataNotifier;
+
+	// CAMERA情報取得のためのメッセージ送信(初回のみこのコマンドを送信する)
 	if (!g_accessor.RTT4ECSend(&g_rtt4ecContext, INITIALIZE_MESSAGE)) {
 		UnInitialize();
 		return FALSE;
@@ -92,6 +103,7 @@ BOOL RTT4ECController::Initialize(LPCSTR szBuffer, char* termination, USHORT uRT
 void RTT4ECController::UnInitialize(void)
 {
 	g_context.bAlive = false;
+	WaitForSingleObject(g_context.hCameraMonitorThread, INFINITE);
 
 	if (g_rtt4ecContext.socketHandler != INVALID_SOCKET) {
 		closesocket(g_rtt4ecContext.socketHandler);
@@ -102,6 +114,9 @@ void RTT4ECController::UnInitialize(void)
 		CloseHandle(g_context.hCameraMonitorThread);
 		g_context.hCameraMonitorThread = NULL;
 	}
+
+	g_dataNotifier.UnInitialize();
+	DeleteCriticalSection(&g_context.lockObject);
 }
 
 void RTT4ECController::Execute(HWND /*hWnd*/, LPCSTR szCommand, double /*deltaX*/, double /*deltaY*/)
@@ -127,18 +142,33 @@ void RTT4ECController::OriginalCommandExecute(LPCSTR command)
 		return;
 	}
 
+	EnterCriticalSection(&g_context.lockObject);
+
 	g_rtt4ecContext.x += x-ox;
 	g_rtt4ecContext.y += y-oy;
 	g_rtt4ecContext.z += z-oz;
 	g_rtt4ecContext.p += p-op;
 	g_rtt4ecContext.h += h-oh;
 	g_rtt4ecContext.r += r-or;
+
+	// 通知するためにデータを詰める
+	int height = (int)g_rtt4ecContext.z + 15;
+	g_context.notifyData.bodyHeight[0] = height & 0xFF;
+	g_context.notifyData.bodyHeight[1] = (height >> 8) & 0xFF;
+	g_context.notifyData.bodyHeight[2] = (height >> 16) & 0xFF;
+	g_context.notifyData.bodyHeight[3] = (height >> 24) & 0xFF;
+	g_dataNotifier.Notify(&g_context.notifyData);
+
 	sprintf_s(message, _countof(message), g_cameraCommandFormat,
-		(float)g_rtt4ecContext.x, (float)g_rtt4ecContext.y, (float)g_rtt4ecContext.z,
-		(float)g_rtt4ecContext.p, (float)g_rtt4ecContext.h, (float)g_rtt4ecContext.r, ' ');
+		g_rtt4ecContext.x, g_rtt4ecContext.y, g_rtt4ecContext.z,
+		g_rtt4ecContext.p, g_rtt4ecContext.h, g_rtt4ecContext.r, ' ');
 	RemoveWhiteSpaceA(message);
 
 	g_accessor.RTT4ECSend(&g_rtt4ecContext, message);
+	//g_accessor.RTT4ECSend(&g_rtt4ecContext, command);
+	
+	LeaveCriticalSection(&g_context.lockObject);
+
 	ox = x;
 	oy = y;
 	oz = z;
