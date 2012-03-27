@@ -31,6 +31,6 @@ typedef struct RTT4ECContext
 
 // RTTへの送信コマンドフォーマット
 // "POSORIENT CAMERA PHR x y z P H R; ?" [?はこのアプリケーション用]
-static const char* g_cameraCommandFormat = "POSORIENT CAMERA PHR %f %f %f %f %f %f ; %c";
+static const char* g_cameraCommandFormat = "POSORIENT PHR CAMERA %f %f %f %f %f %f ; %c";
 
 #endif /* __RTT4EC_COMMON__ */
