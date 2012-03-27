@@ -20,12 +20,12 @@ typedef struct RTT4ECContext
 	int angle;
 	int pitch;
 	int height;
-	int x;
-	int y;
-	int z;
-	int p;
-	int h;
-	int r;
+	float x;
+	float y;
+	float z;
+	float p;
+	float h;
+	float r;
 	int speed;
 } RTT4ECContext;
 

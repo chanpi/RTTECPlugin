@@ -78,7 +78,6 @@ BOOL RTT4ECAccessor::RTT4ECSend(RTT4ECContext* pContext, LPCSTR lpszCommand) {
 		LogDebugMessage(Log_Error, szError);
 		return FALSE;
 	}
-	
 	return TRUE;
 }
 
@@ -103,6 +102,5 @@ BOOL RTT4ECAccessor::RTT4ECRecv(RTT4ECContext* pContext, LPSTR lpszCommand, int 
 		LogDebugMessage(Log_Error, szError);
 		return FALSE;
 	}
-
 	return TRUE;
 }

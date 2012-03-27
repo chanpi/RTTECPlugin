@@ -13,9 +13,9 @@ namespace {
 	extern const int BUFFER_SIZE = 256;
 	const PCSTR INITIALIZE_MESSAGE	= "SUBSCRIBE CAMERA ;";
 	RTT4ECAccessor g_accessor;
-	RTT4ECContext g_rtt4ecContext;
+	RTT4ECContext g_rtt4ecContext = {0};
 
-	RTTContext g_context;
+	RTTContext g_context = {0};
 };
 
 RTT4ECController::RTT4ECController(void)
@@ -61,7 +61,7 @@ BOOL RTT4ECController::Initialize(LPCSTR szBuffer, char* termination, USHORT uRT
 	g_context.pRtt4ecContext = &g_rtt4ecContext;
 
 	// TCPソケットの作成
-	g_rtt4ecContext.socketHandler = g_accessor.InitializeTCPSocket(&g_rtt4ecContext.address, "127.0.0.1", TRUE, uRTTPort);
+	g_rtt4ecContext.socketHandler = g_accessor.InitializeTCPSocket(&g_rtt4ecContext.address, "192.168.1.1", TRUE, uRTTPort);
 	if (g_rtt4ecContext.socketHandler == INVALID_SOCKET) {
 		LogDebugMessage(Log_Error, _T("InitializeSocket <RTT4ECController::Initialize>"));
 		UnInitialize();
@@ -112,22 +112,37 @@ void RTT4ECController::Execute(HWND /*hWnd*/, LPCSTR szCommand, double /*deltaX*
 void RTT4ECController::OriginalCommandExecute(LPCSTR command)
 {
 	char termination;
-	float x, y, z, p, h, r;
+	static float ox = 0., oy = 0., oz = 0., op = 0., oh = 0., or = 0.;
+	float x = 0., y = 0., z = 0., p = 0., h = 0., r = 0.;
 	char message[BUFFER_SIZE] = {0};
 
 	if (sscanf_s(command, g_cameraCommandFormat, &x, &y, &z, &p, &h, &r, &termination, sizeof(termination)) != 7) {
 		strcpy_s(message, _countof(message), command);
 		char* pos = strchr(message, m_cTermination);
 		if (pos != NULL) {
-			*pos = '\0';
+			*pos = ' ';
 		}
+		RemoveWhiteSpaceA(message);
 		g_accessor.RTT4ECSend(&g_rtt4ecContext, message);
 		return;
 	}
 
+	g_rtt4ecContext.x += x-ox;
+	g_rtt4ecContext.y += y-oy;
+	g_rtt4ecContext.z += z-oz;
+	g_rtt4ecContext.p += p-op;
+	g_rtt4ecContext.h += h-oh;
+	g_rtt4ecContext.r += r-or;
 	sprintf_s(message, _countof(message), g_cameraCommandFormat,
-		x + g_rtt4ecContext.x, y + g_rtt4ecContext.y, z + g_rtt4ecContext.z,
-		p + g_rtt4ecContext.p, h + g_rtt4ecContext.h, r + g_rtt4ecContext.r, '\0');
+		(float)g_rtt4ecContext.x, (float)g_rtt4ecContext.y, (float)g_rtt4ecContext.z,
+		(float)g_rtt4ecContext.p, (float)g_rtt4ecContext.h, (float)g_rtt4ecContext.r, ' ');
+	RemoveWhiteSpaceA(message);
 
 	g_accessor.RTT4ECSend(&g_rtt4ecContext, message);
+	ox = x;
+	oy = y;
+	oz = z;
+	op = p;
+	oh = h;
+	or = r;
 }
