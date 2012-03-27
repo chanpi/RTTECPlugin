@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "I4C3DCommon.h"
 #include "RTT4ECController.h"
 #include "RTT4ECAccessor.h"
 #include "I4C3DCursor.h"
@@ -10,7 +11,6 @@
 
 namespace {
 	extern const int BUFFER_SIZE = 256;
-	const PCSTR COMMAND_POSORIENT	= "POSORIENT";
 	const PCSTR INITIALIZE_MESSAGE	= "SUBSCRIBE CAMERA ;";
 	RTT4ECAccessor g_accessor;
 	RTT4ECContext g_rtt4ecContext;
@@ -48,7 +48,13 @@ RTT4ECController::~RTT4ECController(void)
 
 BOOL RTT4ECController::Initialize(LPCSTR szBuffer, char* termination, USHORT uRTTPort)
 {
+	char tmpCommand[BUFFER_SIZE] = {0};
+	char szModKeys[BUFFER_SIZE] = {0};
+	double tumbleRate, trackRate, dollyRate;
+
 	g_context.bAlive = true;
+	sscanf_s(szBuffer, g_initCommandFormat, tmpCommand,	sizeof(tmpCommand), szModKeys, sizeof(szModKeys), &tumbleRate, &trackRate, &dollyRate, termination, sizeof(*termination));
+	m_cTermination = *termination;
 
 	// RTTContextの初期化
 	g_context.pAccessor = &g_accessor;
@@ -58,24 +64,24 @@ BOOL RTT4ECController::Initialize(LPCSTR szBuffer, char* termination, USHORT uRT
 	g_rtt4ecContext.socketHandler = g_accessor.InitializeTCPSocket(&g_rtt4ecContext.address, "127.0.0.1", TRUE, uRTTPort);
 	if (g_rtt4ecContext.socketHandler == INVALID_SOCKET) {
 		LogDebugMessage(Log_Error, _T("InitializeSocket <RTT4ECController::Initialize>"));
-		g_context.bAlive = false;
+		UnInitialize();
 		return FALSE;
 	}
 	if (!g_accessor.SetConnectingSocket(g_rtt4ecContext.socketHandler, &g_rtt4ecContext.address)) {
-		g_context.bAlive = false;
+		UnInitialize();
 		return FALSE;
 	}
 
 	// CAMERA情報取得のためのメッセージ送信
 	if (!g_accessor.RTT4ECSend(&g_rtt4ecContext, INITIALIZE_MESSAGE)) {
-		g_context.bAlive = false;
+		UnInitialize();
 		return FALSE;
 	}
 
 	// カメラ情報受信用スレッドを作成
 	g_context.hCameraMonitorThread = (HANDLE)_beginthreadex(NULL, 0, RTT4ECCameraMonitorThreadProc, &g_context, CREATE_SUSPENDED, &g_context.uCameraMonitorThreadID);
 	if (g_context.hCameraMonitorThread == INVALID_HANDLE_VALUE) {
-		g_context.bAlive = false;
+		UnInitialize();
 		return FALSE;
 	}
 	ResumeThread(g_context.hCameraMonitorThread);
@@ -92,11 +98,13 @@ void RTT4ECController::UnInitialize(void)
 		g_rtt4ecContext.socketHandler = INVALID_SOCKET;
 	}
 
-	CloseHandle(g_context.hCameraMonitorThread);
-	g_context.hCameraMonitorThread = NULL;
+	if (g_context.hCameraMonitorThread != NULL) {
+		CloseHandle(g_context.hCameraMonitorThread);
+		g_context.hCameraMonitorThread = NULL;
+	}
 }
 
-void RTT4ECController::Execute(HWND hWnd, LPCSTR szCommand, double deltaX, double deltaY)
+void RTT4ECController::Execute(HWND /*hWnd*/, LPCSTR szCommand, double /*deltaX*/, double /*deltaY*/)
 {
 	OriginalCommandExecute(szCommand);
 }
@@ -104,11 +112,22 @@ void RTT4ECController::Execute(HWND hWnd, LPCSTR szCommand, double deltaX, doubl
 void RTT4ECController::OriginalCommandExecute(LPCSTR command)
 {
 	char termination;
-	double x, y, z, p, h, r;
+	float x, y, z, p, h, r;
 	char message[BUFFER_SIZE] = {0};
-	sscanf_s(command, g_cameraCommandFormat, &x, &y, &z, &p, &h, &r, &termination, sizeof(termination));
 
-	//sprintf_s(message, _countof(message), g_cameraCommandFormat,
-	//	x + rtt4
-	g_accessor.RTT4ECSend(&g_rtt4ecContext, command);
+	if (sscanf_s(command, g_cameraCommandFormat, &x, &y, &z, &p, &h, &r, &termination, sizeof(termination)) != 7) {
+		strcpy_s(message, _countof(message), command);
+		char* pos = strchr(message, m_cTermination);
+		if (pos != NULL) {
+			*pos = '\0';
+		}
+		g_accessor.RTT4ECSend(&g_rtt4ecContext, message);
+		return;
+	}
+
+	sprintf_s(message, _countof(message), g_cameraCommandFormat,
+		x + g_rtt4ecContext.x, y + g_rtt4ecContext.y, z + g_rtt4ecContext.z,
+		p + g_rtt4ecContext.p, h + g_rtt4ecContext.h, r + g_rtt4ecContext.r, '\0');
+
+	g_accessor.RTT4ECSend(&g_rtt4ecContext, message);
 }

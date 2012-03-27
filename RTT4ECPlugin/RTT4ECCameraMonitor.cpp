@@ -7,7 +7,8 @@
 static const int BUFFER_SIZE = 256;
 static const int MONITORING_INTERVAL = 1000;
 
-void RTT4ECFilter(LPSTR lpszCommand, void* context);
+static void RTT4ECFilter(LPSTR lpszCommand, RTT4ECContext* pRtt4ecContext);
+static void RTT4ECParseCommand(LPCSTR lpszCommand, RTT4ECContext* pRtt4ecContext);
 
 unsigned int __stdcall RTT4ECCameraMonitorThreadProc(void *pParam)
 {

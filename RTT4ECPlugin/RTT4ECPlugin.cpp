@@ -107,10 +107,10 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 #else
 	logLevel = Log_Error;
 #endif
-	if (!LogFileOpenW("RTT", logLevel)) {
+	if (!LogFileOpenW("RTT4ECPlugin", logLevel)) {
 		ReportError(_T("RTTのログは出力されません。"));
 	}
-	LogDebugMessage(Log_Debug, _T("RTT log file opened."));
+	LogDebugMessage(Log_Debug, _T("RTT4ECPlugin log file opened."));
 
 	// アプリケーションの初期化を実行します:
 	if (!InitInstance (hInstance, nCmdShow))
@@ -227,6 +227,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	I4C3DUDPPacket packet = {0};
 	char szCommand[32] = {0};
 	static char cTermination = '?';
+	double deltaX, deltaY;
 
 	int nBytes = 0;
 	TCHAR szError[BUFFER_SIZE] = {0};
@@ -266,8 +267,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					controller.UnInitialize();
 					DestroyWindow(hWnd);
 
-				// RTT4TCP用コマンド
-				} else if (_strcmpi(szCommand, COMMAND_POSORIENT) == 0) {
+				// RTT4EC用コマンド
+				} else {
+				//} else if (_strcmpi(szCommand, COMMAND_POSORIENT) == 0) {
 					controller.Execute(hTargetWnd, packet.szCommand, deltaX, deltaY);	// POSORIENT ...
 
 				}
