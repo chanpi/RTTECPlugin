@@ -7,7 +7,7 @@
 #include "Miscellaneous.h"
 
 static const int BUFFER_SIZE = 256;
-static const int MONITORING_INTERVAL = 100;
+static const int MONITORING_INTERVAL = 80;
 
 static void RTT4ECParseCommand(LPSTR lpszCommand, RTTContext* pContext);
 
@@ -73,16 +73,12 @@ static void RTT4ECParseCommand(LPSTR lpszCommand, RTTContext* pContext) {
 				pContext->pRtt4ecContext->z = (float)atof(tempChar);
 				{
 					// 通知するためにデータを詰める
-					int height = (int)pContext->pRtt4ecContext->z + 15;
-					pContext->notifyData.bodyHeight[0] = height & 0xFF;
-					pContext->notifyData.bodyHeight[1] = (height >> 8) & 0xFF;
-					pContext->notifyData.bodyHeight[2] = (height >> 16) & 0xFF;
-					pContext->notifyData.bodyHeight[3] = (height >> 24) & 0xFF;
+					pContext->pNotifier->Int2Byte((int)pContext->pRtt4ecContext->z, pContext->notifyData.bodyHeight);
 					pContext->pNotifier->Notify(&pContext->notifyData);
 
-					TCHAR szBuffer[32];
-					_stprintf_s(szBuffer, 32, _T("height = %d\n"), height);
-					OutputDebugString(szBuffer);
+					//TCHAR szBuffer[32];
+					//_stprintf_s(szBuffer, 32, _T("height = %d\n"), (int)pContext->pRtt4ecContext->z);
+					//OutputDebugString(szBuffer);
 				}
 				break;
 			case 9:
@@ -95,10 +91,9 @@ static void RTT4ECParseCommand(LPSTR lpszCommand, RTTContext* pContext) {
 				pContext->pRtt4ecContext->r = (float)atof(tempChar);
 				break;
 			}
-			i++;
-			//if (11 < ++i) {
-			//	break;
-			//}
+			if (11 < ++i) {
+				break;
+			}
 		}
 	}
 	LeaveCriticalSection(&pContext->lockObject);

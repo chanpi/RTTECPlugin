@@ -12,6 +12,7 @@
 
 namespace {
 	extern const int BUFFER_SIZE = 256;
+	const float M_PI = 3.14159;
 	const PCSTR INITIALIZE_MESSAGE	= "SUBSCRIBE CAMERA ;";
 	RTT4ECAccessor g_accessor;
 	RTT4ECContext g_rtt4ecContext = {0};
@@ -67,8 +68,7 @@ BOOL RTT4ECController::Initialize(LPCSTR szBuffer, char* termination, USHORT uRT
 	g_context.pRtt4ecContext = &g_rtt4ecContext;
 
 	// TCPÉ\ÉPÉbÉgÇÃçÏê¨
-	//g_rtt4ecContext.socketHandler = g_accessor.InitializeTCPSocket(&g_rtt4ecContext.address, "127.0.0.1", TRUE, uRTTPort);
-	g_rtt4ecContext.socketHandler = g_accessor.InitializeTCPSocket(&g_rtt4ecContext.address, "192.168.1.1", TRUE, uRTTPort);
+	g_rtt4ecContext.socketHandler = g_accessor.InitializeTCPSocket(&g_rtt4ecContext.address, "127.0.0.1", TRUE, uRTTPort);
 	if (g_rtt4ecContext.socketHandler == INVALID_SOCKET) {
 		LogDebugMessage(Log_Error, _T("InitializeSocket <RTT4ECController::Initialize>"));
 		UnInitialize();
@@ -144,19 +144,43 @@ void RTT4ECController::OriginalCommandExecute(LPCSTR command)
 
 	EnterCriticalSection(&g_context.lockObject);
 
-	g_rtt4ecContext.x += x-ox;
-	g_rtt4ecContext.y += y-oy;
 	g_rtt4ecContext.z += z-oz;
 	g_rtt4ecContext.p += p-op;
 	g_rtt4ecContext.h += h-oh;
 	g_rtt4ecContext.r += r-or;
 
+	{
+		float sinval = 0., cosval = 0.;	
+		float deltaX = x-ox, deltaY = y-oy;
+		float move;
+		sinval = sin(M_PI * h / 180);
+		cosval = cos(M_PI * h / 180);
+		// 0èúéZñhé~
+		move = (fabs(sinval - 0.0) > DBL_EPSILON) ? fabs(deltaX / sinval) : fabs(deltaY / cosval);
+
+		if (deltaX * sinval > 0 || (fabs(g_rtt4ecContext.h - 0.0) > DBL_EPSILON && deltaY * cosval < 0)) {
+			//OutputDebugString(_T("forward_x\n"));
+			g_rtt4ecContext.x += move * sin(M_PI * g_rtt4ecContext.h / 180);
+		} else if (deltaX * sinval < 0 || (fabs(g_rtt4ecContext.h - 0.0) > DBL_EPSILON && deltaY * cosval > 0)) {
+			//OutputDebugString(_T("backward_x\n"));
+			g_rtt4ecContext.x -= move * sin(M_PI * g_rtt4ecContext.h / 180);
+		} else {
+			g_rtt4ecContext.x += deltaX;
+		}
+
+		if (deltaY * cosval > 0) {
+			//OutputDebugString(_T("backward_y\n"));
+			g_rtt4ecContext.y += move * cos(M_PI * g_rtt4ecContext.h / 180);
+		} else if (deltaY * cosval < 0) {
+			//OutputDebugString(_T("forward_y\n"));
+			g_rtt4ecContext.y -= move * cos(M_PI * g_rtt4ecContext.h / 180);
+		} else {
+			g_rtt4ecContext.y += deltaY;
+		}
+	}
+
 	// í ímÇ∑ÇÈÇΩÇﬂÇ…ÉfÅ[É^ÇãlÇﬂÇÈ
-	int height = (int)g_rtt4ecContext.z + 15;
-	g_context.notifyData.bodyHeight[0] = height & 0xFF;
-	g_context.notifyData.bodyHeight[1] = (height >> 8) & 0xFF;
-	g_context.notifyData.bodyHeight[2] = (height >> 16) & 0xFF;
-	g_context.notifyData.bodyHeight[3] = (height >> 24) & 0xFF;
+	g_context.pNotifier->Int2Byte((int)g_rtt4ecContext.z, g_context.notifyData.bodyHeight);
 	g_dataNotifier.Notify(&g_context.notifyData);
 
 	sprintf_s(message, _countof(message), g_cameraCommandFormat,
@@ -165,7 +189,6 @@ void RTT4ECController::OriginalCommandExecute(LPCSTR command)
 	RemoveWhiteSpaceA(message);
 
 	g_accessor.RTT4ECSend(&g_rtt4ecContext, message);
-	//g_accessor.RTT4ECSend(&g_rtt4ecContext, command);
 	
 	LeaveCriticalSection(&g_context.lockObject);
 

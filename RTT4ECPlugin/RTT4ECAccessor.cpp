@@ -105,9 +105,15 @@ BOOL RTT4ECAccessor::RTT4ECRecv(RTT4ECContext* pContext, LPSTR lpszCommand, int 
 
 	nResult = recv(pContext->socketHandler, lpszCommand, nLength, 0);
 	if (nResult == SOCKET_ERROR) {
-		TCHAR szError[BUFFER_SIZE] = {0};
-		_stprintf_s(szError, _countof(szError), _T("[ERROR] recv(). Error No. %d <RTT4ECAccessor::RTT4ECRecv>"), GetLastError());
-		LogDebugMessage(Log_Error, szError);
+		DWORD error = GetLastError();
+		if (error == WSAETIMEDOUT) {
+			// 今回タイムアウトをイベントとして扱うため、あえてエラーメッセージは表示させていません。
+			return FALSE;
+		} else {
+			TCHAR szError[BUFFER_SIZE] = {0};
+			_stprintf_s(szError, _countof(szError), _T("[ERROR] recv(). Error No. %d <RTT4ECAccessor::RTT4ECRecv>"), GetLastError());
+			LogDebugMessage(Log_Error, szError);
+		}
 		return FALSE;
 	}
 	return TRUE;

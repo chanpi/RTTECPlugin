@@ -30,13 +30,15 @@ void DataNotifier::UnInitialize(void)
 
 int DataNotifier::Notify(NotifyDataFormat* pData)
 {
-	{
-		NotifyDataFormat f = (NotifyDataFormat)*pData;
-		int height = (f.bodyHeight[0]) | (f.bodyHeight[1] << 8) | (f.bodyHeight[2] << 16) | (f.bodyHeight[3] << 24);
-		TCHAR szBuffer[32];
-		_stprintf_s(szBuffer, 32, _T(">>> %d\n"), height);
-		OutputDebugString(szBuffer);
-	}
+	//{
+	//	NotifyDataFormat f = (NotifyDataFormat)*pData;
+	//	int height = 0;
+	//	Bytes2Int(f.bodyHeight, &height);
+	//	TCHAR szBuffer[32];
+	//	_stprintf_s(szBuffer, 32, _T(">>> %d\n"), height);
+	//	OutputDebugString(szBuffer);
+	//}
+
 	int sendBytes = 0;
 	if (m_socketHandler != INVALID_SOCKET) {
 		sendBytes = sendto(m_socketHandler, (const char*)pData, sizeof(NotifyDataFormat), 0, (const sockaddr*)&m_address, sizeof(m_address));
