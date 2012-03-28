@@ -72,7 +72,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	int argc = 0;
 	LPTSTR *argv = NULL;
 	argv = CommandLineToArgvW(GetCommandLine(), &argc);
-	if (argc != 4) {
+	if (argc < 4) {
 		MessageBox(NULL, _T("[ERROR] ˆø”‚ª‘«‚è‚Ü‚¹‚ñ[—á: RTT4ECPlugin.exe 10005 54321 3333]B<RTT4ECPlugin>"), szTitle, MB_OK | MB_ICONERROR);
 		LocalFree(argv);
 		CleanupMutex();

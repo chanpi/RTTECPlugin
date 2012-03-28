@@ -26,7 +26,7 @@ typedef struct RTT4ECContext
 	float p;
 	float h;
 	float r;
-	int speed;
+	float speed;
 } RTT4ECContext;
 
 // RTTへの送信コマンドフォーマット
