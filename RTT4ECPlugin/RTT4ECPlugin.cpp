@@ -6,6 +6,7 @@
 #include "RTT4ECController.h"
 #include "Miscellaneous.h"
 #include "I4C3DCommon.h"
+#include "ErrorCodeList.h"
 #include <ShellAPI.h>
 
 #include <cstdlib>	// 必要
@@ -19,6 +20,7 @@
 
 #define MAX_LOADSTRING	100
 
+int F710ErrorCode = EXIT_SUCCESS;
 const int BUFFER_SIZE = 256;
 static const PCSTR COMMAND_INIT				= "init";
 static const PCSTR COMMAND_EXIT				= "exit";
@@ -62,22 +64,36 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	// グローバル文字列を初期化しています。
 	LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
 	LoadString(hInstance, IDC_RTT4ECPlugin, szWindowClass, MAX_LOADSTRING);
-
-	if (!ExecuteOnce(szTitle)) {
-		return EXIT_SUCCESS;
-	}
-
 	MyRegisterClass(hInstance);
 
+	LOG_LEVEL logLevel = Log_Error;
+#if _DEBUG || DEBUG
+	logLevel = Log_Debug;
+#else
+	logLevel = Log_Error;
+#endif
+	if (!LogFileOpenW("RTT4ECPlugin", logLevel)) {
+		//ReportError(_T("RTTのログは出力されません。"));
+	}
+	LogDebugMessage(Log_Debug, _T("RTT4EC log file opened."));
+	
 	int argc = 0;
 	LPTSTR *argv = NULL;
 	argv = CommandLineToArgvW(GetCommandLine(), &argc);
-	if (argc < 4) {
-		MessageBox(NULL, _T("[ERROR] 引数が足りません[例: RTT4ECPlugin.exe 10005 54321 3333]。<RTT4ECPlugin>"), szTitle, MB_OK | MB_ICONERROR);
+	if (argc < 5) {	// 最後の引数はランチャーからもらう"-run"
+		LogDebugMessage(Log_Error, _T("[ERROR] 引数が足りません[例: RTT4ECPlugin.exe 10005 54321 3333]。<RTT4ECPlugin>"));
 		LocalFree(argv);
-		CleanupMutex();
-		return EXIT_FAILURE;
+		LogFileCloseW();
+		return EXIT_NO_ARGUMENTS;
 	}
+
+	if (0 != _tcsicmp(argv[4], _T("-run"))) {
+		LogDebugMessage(Log_Error, _T("起動オプションがありません。このアプリケーションはランチャーから起動される必要があります。"));
+		LocalFree(argv);
+		LogFileCloseW();
+		return EXIT_NOT_EXECUTABLE;
+	}
+
 	g_uPort = static_cast<USHORT>(_wtoi(argv[1]));
 	OutputDebugString(argv[1]);
 	g_uNotifyPort = static_cast<USHORT>(_wtoi(argv[2]));
@@ -93,35 +109,23 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	wVersion = MAKEWORD(2,2);
 	nResult = WSAStartup(wVersion, &wsaData);
 	if (nResult != 0) {
-		MessageBox(NULL, _T("[ERROR] Initialize Winsock."), szTitle, MB_OK | MB_ICONERROR);
-		CleanupMutex();
-		return EXIT_FAILURE;
+		LogDebugMessage(Log_Error, _T("[ERROR] Initialize Winsock."));
+		LogFileCloseW();
+		return EXIT_SOCKET_ERROR;
 	}
 	if (wsaData.wVersion != wVersion) {
-		MessageBox(NULL, _T("[ERROR] Winsock バージョン."), szTitle, MB_OK | MB_ICONERROR);
+		LogDebugMessage(Log_Error, _T("[ERROR] Winsock バージョン."));
 		WSACleanup();
-		CleanupMutex();
-		return EXIT_FAILURE;
+		LogFileCloseW();
+		return EXIT_SOCKET_ERROR;
 	}
-
-	LOG_LEVEL logLevel = Log_Error;
-#if _DEBUG || DEBUG
-	logLevel = Log_Debug;
-#else
-	logLevel = Log_Error;
-#endif
-	if (!LogFileOpenW("RTT4ECPlugin", logLevel)) {
-		ReportError(_T("RTTのログは出力されません。"));
-	}
-	LogDebugMessage(Log_Debug, _T("RTT4ECPlugin log file opened."));
 
 	// アプリケーションの初期化を実行します:
 	if (!InitInstance (hInstance, nCmdShow))
 	{
 		WSACleanup();
-		CleanupMutex();
 		LogFileCloseW();
-		return FALSE;
+		return EXIT_SYSTEM_ERROR;
 	}
 
 	hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_RTT4ECPlugin));
@@ -137,9 +141,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	}
 
 	WSACleanup();
-	CleanupMutex();
 	LogFileCloseW();
-	LogDebugMessage(Log_Debug, _T("RTT log file closed."));
+	LogDebugMessage(Log_Debug, _T("RTT4EC log file closed."));
 	return (int) msg.wParam;
 }
 
@@ -239,6 +242,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 	case WM_CREATE:
 		socketHandler = InitializeController(hWnd, g_uPort);
+		if (INVALID_SOCKET == socketHandler) {
+			PostQuitMessage(EXIT_SOCKET_ERROR);
+			return 0;
+		}
 		break;
 
 	case MY_WINSOCKSELECT:
@@ -261,9 +268,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			} else if (scanCount == 1) {
 				if (_strcmpi(szCommand, COMMAND_INIT) == 0) {
 					if (!controller.Initialize(packet.szCommand, &cTermination, g_uRTTPort, g_uNotifyPort)) {
-						_stprintf_s(szError, _countof(szError), _T("RTT4ECコントローラの初期化に失敗しています。"));
-						ReportError(szError);
+						_stprintf_s(szError, _countof(szError), _T("RTT4ECプラグインの初期化に失敗しています。"));
+						LogDebugMessage(Log_Error, szError);
+						PostQuitMessage(F710ErrorCode);
+						return 0;
 					}
+
 				} else if (_strcmpi(szCommand, COMMAND_EXIT) == 0) {
 					OutputDebugString(_T("exit\n"));
 					controller.UnInitialize();
@@ -305,13 +315,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case MY_I4C3DREBOOT:
 		UnInitializeController(socketHandler);
 		socketHandler = InitializeController(hWnd, g_uPort);
+		if (INVALID_SOCKET == socketHandler) {
+			PostQuitMessage(EXIT_SOCKET_ERROR);
+		}
 		break;
 
 	case MY_I4C3DDESTROY:
 	case WM_CLOSE:
 	case WM_DESTROY:
 		UnInitializeController(socketHandler);
-		PostQuitMessage(0);
+		PostQuitMessage(EXIT_SUCCESS);
 		break;
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);
@@ -349,7 +362,6 @@ SOCKET InitializeController(HWND hWnd, USHORT uPort)
 	socketHandler = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if (socketHandler == INVALID_SOCKET) {
 		_stprintf_s(szError, _countof(szError), _T("[ERROR] socket() : %d"), WSAGetLastError());
-		//ReportError(szError);
 		LogDebugMessage(Log_Error, szError);
 		return INVALID_SOCKET;
 	}
@@ -361,7 +373,6 @@ SOCKET InitializeController(HWND hWnd, USHORT uPort)
 	nResult = bind(socketHandler, (const SOCKADDR*)&address, sizeof(address));
 	if (nResult == SOCKET_ERROR) {
 		_stprintf_s(szError, _countof(szError), _T("[ERROR] bind() : %d"), WSAGetLastError());
-		//ReportError(szError);
 		LogDebugMessage(Log_Error, szError);
 		closesocket(socketHandler);
 		return INVALID_SOCKET;
@@ -369,8 +380,9 @@ SOCKET InitializeController(HWND hWnd, USHORT uPort)
 
 	if (WSAAsyncSelect(socketHandler, hWnd, MY_WINSOCKSELECT, FD_READ) == SOCKET_ERROR) {
 		TCHAR* szError = _T("ソケットイベント通知設定に失敗しました。<RTT4ECPlugin::InitializeController>");
-		//ReportError(szError);
 		LogDebugMessage(Log_Error, szError);
+		closesocket(socketHandler);
+		return INVALID_SOCKET;
 	}
 
 	return socketHandler;

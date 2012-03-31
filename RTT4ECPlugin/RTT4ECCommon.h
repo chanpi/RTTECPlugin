@@ -4,17 +4,14 @@
 #include <map>
 #include <string>
 using namespace std;
+typedef std::basic_string<TCHAR> tstring;
 
 typedef struct RTT4ECContext
 {
 	SOCKET socketHandler;
 	struct sockaddr_in address;
 
-#if UNICODE || _UNICODE
-	map<wstring, string> macroMap;	// key:マクロ名、value:マクロの値
-#else
-	map<string, string> macroMap;	// key:マクロ名、value:マクロの値
-#endif
+	map<tstring, string> macroMap;	// key:マクロ名、value:マクロの値
 
 	int move;
 	int angle;

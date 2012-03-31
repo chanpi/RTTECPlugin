@@ -49,7 +49,7 @@
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\..\I4C3DDriver\I4C3DDriver;$(SolutionDir)\..\Miscellaneous;$(SolutionDir)\..\I4C3DKeysHook\I4C3DKeysHook;$(SolutionDir)\..\VirtualMotion\VirtualMotion;$(SolutionDir)\..\RTTPlugin\RTTPlugin;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\..\I4C3DDriver\I4C3DDriver;$(SolutionDir)\..\Miscellaneous;$(SolutionDir)\..\I4C3DKeysHook\I4C3DKeysHook;$(SolutionDir)\..\VirtualMotion\VirtualMotion;$(SolutionDir)\..\RTTPlugin\RTTPlugin;$(SolutionDir)\..\I4C3DLauncher\I4C3DLauncher;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -67,7 +67,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\..\I4C3DDriver\I4C3DDriver;$(SolutionDir)\..\Miscellaneous;$(SolutionDir)\..\I4C3DKeysHook\I4C3DKeysHook;$(SolutionDir)\..\VirtualMotion\VirtualMotion;$(SolutionDir)\..\RTTPlugin\RTTPlugin;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\..\I4C3DDriver\I4C3DDriver;$(SolutionDir)\..\Miscellaneous;$(SolutionDir)\..\I4C3DKeysHook\I4C3DKeysHook;$(SolutionDir)\..\VirtualMotion\VirtualMotion;$(SolutionDir)\..\RTTPlugin\RTTPlugin;$(SolutionDir)\..\I4C3DLauncher\I4C3DLauncher;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>

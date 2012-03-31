@@ -6,9 +6,12 @@
 #include "RTT4ECCameraMonitor.h"
 #include "DataNotifier.h"
 #include "Miscellaneous.h"
+#include "ErrorCodeList.h"
 #include <math.h>
 #include <float.h>
 #include <process.h>
+
+extern int F710ErrorCode;
 
 namespace {
 	extern const int BUFFER_SIZE = 256;
@@ -72,10 +75,12 @@ BOOL RTT4ECController::Initialize(LPCSTR szBuffer, char* termination, USHORT uRT
 	if (g_rtt4ecContext.socketHandler == INVALID_SOCKET) {
 		LogDebugMessage(Log_Error, _T("InitializeSocket <RTT4ECController::Initialize>"));
 		UnInitialize();
+		F710ErrorCode = EXIT_RTT4EC_CONNECT_ERROR;
 		return FALSE;
 	}
 	if (!g_accessor.SetConnectingSocket(g_rtt4ecContext.socketHandler, &g_rtt4ecContext.address)) {
 		UnInitialize();
+		F710ErrorCode = EXIT_RTT4EC_CONNECT_ERROR;
 		return FALSE;
 	}
 
@@ -86,6 +91,7 @@ BOOL RTT4ECController::Initialize(LPCSTR szBuffer, char* termination, USHORT uRT
 	// CAMERA情報取得のためのメッセージ送信(初回のみこのコマンドを送信する)
 	if (!g_accessor.RTT4ECSend(&g_rtt4ecContext, INITIALIZE_MESSAGE)) {
 		UnInitialize();
+		F710ErrorCode = EXIT_RTT4EC_CONNECT_ERROR;
 		return FALSE;
 	}
 
@@ -93,6 +99,7 @@ BOOL RTT4ECController::Initialize(LPCSTR szBuffer, char* termination, USHORT uRT
 	g_context.hCameraMonitorThread = (HANDLE)_beginthreadex(NULL, 0, RTT4ECCameraMonitorThreadProc, &g_context, CREATE_SUSPENDED, &g_context.uCameraMonitorThreadID);
 	if (g_context.hCameraMonitorThread == INVALID_HANDLE_VALUE) {
 		UnInitialize();
+		F710ErrorCode = EXIT_RTT4EC_CONNECT_ERROR;
 		return FALSE;
 	}
 	ResumeThread(g_context.hCameraMonitorThread);

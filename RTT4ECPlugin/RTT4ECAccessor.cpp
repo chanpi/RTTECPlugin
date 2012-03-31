@@ -22,7 +22,6 @@ SOCKET RTT4ECAccessor::InitializeTCPSocket(struct sockaddr_in* pAddress, LPCSTR 
 	socketHandler = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (socketHandler == INVALID_SOCKET) {
 		_stprintf_s(szError, _countof(szError), _T("[ERROR] socket() : %d"), WSAGetLastError());
-		ReportError(szError);
 		LogDebugMessage(Log_Error, szError);
 		return socketHandler;
 	}
@@ -45,7 +44,6 @@ SOCKET RTT4ECAccessor::InitializeUDPSocket(struct sockaddr_in* pAddress, LPCSTR 
 	socketHandler = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if (socketHandler == INVALID_SOCKET) {
 		_stprintf_s(szError, _countof(szError), _T("[ERROR] socket() : %d"), WSAGetLastError());
-		ReportError(szError);
 		LogDebugMessage(Log_Error, szError);
 		return socketHandler;
 	}
@@ -66,7 +64,6 @@ BOOL RTT4ECAccessor::SetConnectingSocket(const SOCKET& socketHandler, const stru
 	nResult = connect(socketHandler, (const sockaddr*)pAddress, sizeof(*pAddress));
 	if (nResult == SOCKET_ERROR) {
 		_stprintf_s(szError, _countof(szError), _T("[ERROR] connect() : %d"), WSAGetLastError());
-		ReportError(szError);
 		LogDebugMessage(Log_Error, szError);
 		closesocket(socketHandler);
 		return FALSE;
