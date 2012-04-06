@@ -7,6 +7,7 @@
 #include "Misc.h"
 #include "I4C3DCommon.h"
 #include "SharedConstants.h"
+#include "CertificateManager.h"
 #include <ShellAPI.h>
 
 #include <cstdlib>	// 必要
@@ -31,6 +32,7 @@ const int BUFFER_SIZE = 256;
 static const PCSTR COMMAND_INIT				= "init";
 static const PCSTR COMMAND_EXIT				= "exit";
 static const PCSTR COMMAND_POSORIENT		= "POSORIENT";
+static const PCTSTR g_szExecutableOption	= _T("-run");
 
 // グローバル変数:
 HINSTANCE hInst;								// 現在のインターフェイス
@@ -86,26 +88,35 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	int argc = 0;
 	LPTSTR *argv = NULL;
 	argv = CommandLineToArgvW(GetCommandLine(), &argc);
-	if (argc < 5) {	// 最後の引数はランチャーからもらう"-run"
+	if (argc < 6) {	// 最後の引数はランチャーからもらう"-run"
 		LoggingMessage(Log_Error, _T(MESSAGE_ERROR_PLUGIN_ARGUMENT), GetLastError(), g_FILE, __LINE__);
 		LocalFree(argv);
 		LogFileCloseW();
 		return EXIT_NO_ARGUMENTS;
 	}
 
-	if (0 != _tcsicmp(argv[4], _T("-run"))) {
+	// ライセンスファイル名取得
+	int result = CheckLicense(argv[1]);
+	if (result != EXIT_SUCCESS) {
+		LoggingMessage(Log_Error, _T(MESSAGE_ERROR_CERT_FAILED), GetLastError(), g_FILE, __LINE__);
+		LocalFree(argv);
+		LogFileCloseW();
+		return result;
+	}
+
+	if (0 != _tcsicmp(argv[5], g_szExecutableOption)) {
 		LoggingMessage(Log_Error, _T(MESSAGE_ERROR_PLUGIN_OPTION), GetLastError(), g_FILE, __LINE__);
 		LocalFree(argv);
 		LogFileCloseW();
 		return EXIT_NOT_EXECUTABLE;
 	}
 
-	g_uPort = static_cast<USHORT>(_wtoi(argv[1]));
-	OutputDebugString(argv[1]);
-	g_uNotifyPort = static_cast<USHORT>(_wtoi(argv[2]));
+	g_uPort = static_cast<USHORT>(_wtoi(argv[2]));
 	OutputDebugString(argv[2]);
-	g_uRTTPort = static_cast<USHORT>(_wtoi(argv[3]));
+	g_uNotifyPort = static_cast<USHORT>(_wtoi(argv[3]));
 	OutputDebugString(argv[3]);
+	g_uRTTPort = static_cast<USHORT>(_wtoi(argv[4]));
+	OutputDebugString(argv[4]);
 	LocalFree(argv);
 
 	static WSAData wsaData;
