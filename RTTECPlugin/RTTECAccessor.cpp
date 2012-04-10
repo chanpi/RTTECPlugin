@@ -23,7 +23,7 @@ RTTECAccessor::~RTTECAccessor(void)
 
 SOCKET RTTECAccessor::InitializeTCPSocket(struct sockaddr_in* pAddress, LPCSTR szAddress, BOOL bSend, USHORT uPort)
 {
-	SOCKET socketHandler;
+	SOCKET socketHandler = INVALID_SOCKET;
 
 	socketHandler = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (socketHandler == INVALID_SOCKET) {
@@ -72,7 +72,6 @@ BOOL RTTECAccessor::SetConnectingSocket(const SOCKET& socketHandler, const struc
 }
 
 BOOL RTTECAccessor::RTTECSend(RTTECContext* pContext, LPCSTR lpszCommand) {
-	static unsigned int counter = 0;
 	int nResult = 0;
 
 	if (pContext->socketHandler == INVALID_SOCKET ||

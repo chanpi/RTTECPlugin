@@ -80,7 +80,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 #else
 	logLevel = Log_Error;
 #endif
-	if (!LogFileOpenW(SHARED_LOG_FILE_NAME, logLevel)) {
+	if (!LogFileOpenW(SHARED_LOG_FILE_DIRECTORY, SHARED_LOG_FILE_NAME, logLevel)) {
 	}
 
 	LoggingMessage(Log_Debug, _T(MESSAGE_DEBUG_LOG_OPEN), GetLastError(), g_FILE, __LINE__);
@@ -119,9 +119,9 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	OutputDebugString(argv[4]);
 	LocalFree(argv);
 
-	static WSAData wsaData;
-	WORD wVersion;
-	int nResult;
+	static WSAData wsaData = {0};
+	WORD wVersion = 0;
+	int nResult = 0;
 
 	wVersion = MAKEWORD(2,2);
 	nResult = WSAStartup(wVersion, &wsaData);
@@ -251,7 +251,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	I4C3DUDPPacket packet = {0};
 	char szCommand[32] = {0};
 	static char cTermination = '?';
-	double deltaX, deltaY;
+	double deltaX = 0., deltaY = 0.;
 
 	int nBytes = 0;
 
@@ -275,7 +275,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 			}
 
-			HWND hTargetWnd = 0;
+			HWND hTargetWnd = NULL;
 			int scanCount = AnalyzeMessage(&packet, &hTargetWnd, szCommand, _countof(szCommand), &deltaX, &deltaY, cTermination);
 			if (scanCount == 3) {
 				controller.Execute(hTargetWnd, szCommand, deltaX, deltaY);
@@ -369,8 +369,8 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
 SOCKET InitializeController(HWND hWnd, USHORT uPort)
 {
-	SOCKET socketHandler;
-	SOCKADDR_IN address;
+	SOCKET socketHandler = INVALID_SOCKET;
+	SOCKADDR_IN address = {0};
 	int nResult = 0;
 
 	socketHandler = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);

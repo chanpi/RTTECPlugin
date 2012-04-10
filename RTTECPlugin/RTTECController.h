@@ -36,6 +36,5 @@ protected:
 
 	BOOL InitializeModifierKeys(PCSTR szModifierKeys);
 	char m_cTermination;
-	I4C3DCursor* m_pCursor;
 };
 

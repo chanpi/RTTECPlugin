@@ -2,7 +2,6 @@
 #include "I4C3DCommon.h"
 #include "RTTECController.h"
 #include "RTTECAccessor.h"
-#include "I4C3DCursor.h"
 #include "RTTECCameraMonitor.h"
 #include "DataNotifier.h"
 #include "Misc.h"
@@ -30,15 +29,13 @@ namespace {
 	RTTContext g_context = {0};
 };
 
-RTTECController::RTTECController(void)
+RTTECController::RTTECController(void):
+m_cTermination(NULL)
 {
-	m_pCursor		= new I4C3DCursor;
 }
 
 RTTECController::~RTTECController(void)
 {
-	delete m_pCursor;
-	m_pCursor = NULL;
 }
 
 /**
@@ -62,7 +59,7 @@ BOOL RTTECController::Initialize(LPCSTR szBuffer, char* termination, USHORT uRTT
 {
 	char tmpCommand[BUFFER_SIZE] = {0};
 	char szModKeys[BUFFER_SIZE] = {0};
-	double tumbleRate, trackRate, dollyRate;
+	double tumbleRate = 0., trackRate = 0., dollyRate = 0.;
 
 	// bAlive = trueÇ…Ç∑ÇÈÇ±Ç∆Ç≈ÉvÉçÉOÉâÉÄÇ™â“ì≠èoóàÇÈèÛë‘Ç…Ç∑ÇÈ
 	g_context.bAlive = true;
@@ -139,7 +136,7 @@ void RTTECController::Execute(HWND /*hWnd*/, LPCSTR szCommand, double /*deltaX*/
 
 void RTTECController::OriginalCommandExecute(LPCSTR command)
 {
-	char termination;
+	char termination = '?';
 	static float ox = 0., oy = 0., oz = 0., op = 0., oh = 0., or = 0.;
 	float x = 0., y = 0., z = 0., p = 0., h = 0., r = 0.;
 	char message[BUFFER_SIZE] = {0};
@@ -165,7 +162,7 @@ void RTTECController::OriginalCommandExecute(LPCSTR command)
 	{
 		float sinval = 0., cosval = 0.;	
 		float deltaX = x-ox, deltaY = y-oy;
-		float move;
+		float move = 0.;
 		sinval = sin(M_PI * h / 180);
 		cosval = cos(M_PI * h / 180);
 		// 0èúéZñhé~
